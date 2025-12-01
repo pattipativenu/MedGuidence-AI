@@ -8,7 +8,8 @@
 import { validateAndLogConfig } from './config-validator';
 
 // Run validation on module load (server-side only)
-if (typeof window === 'undefined') {
+// Skip validation during build time (when running next build)
+if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
   // Only validate in development or on first server start
   if (process.env.NODE_ENV === 'development' || !global.__evidenceConfigValidated) {
     validateAndLogConfig();
