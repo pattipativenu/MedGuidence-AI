@@ -103,7 +103,6 @@ An advanced medical AI assistant providing evidence-based clinical information t
 - Node.js 18+ 
 - npm or yarn
 - Google Gemini API key
-- Perplexity API key (optional but recommended)
 
 ### Installation
 
@@ -129,9 +128,6 @@ GEMINI_API_KEY=your_gemini_api_key_here
 # Optional (improves rate limits)
 NCBI_API_KEY=your_ncbi_api_key_here
 
-# Optional (enables Perplexity fallback)
-PERPLEXITY_API_KEY=your_perplexity_api_key_here
-
 # Optional (for OpenAlex polite pool)
 OPENALEX_EMAIL=your_email@example.com
 ```
@@ -142,7 +138,7 @@ npm run dev
 ```
 
 5. **Open your browser**
-Navigate to [http://localhost:3000](http://localhost:3000)
+Navigate to [(https://medguidence-ai-473674535154.us-central1.run.app/)]
 
 ### Production Build
 
