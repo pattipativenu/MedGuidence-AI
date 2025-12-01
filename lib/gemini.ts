@@ -5,13 +5,15 @@ import { GoogleGenAI } from "@google/genai";
 // In Next.js, server-side code can access process.env directly
 const apiKey = process.env.GEMINI_API_KEY;
 
-if (!apiKey) {
-  console.error("GEMINI_API_KEY is not set in environment variables");
-  throw new Error("GEMINI_API_KEY is not set in environment variables");
+// During build time (next build), API key might not be available
+// Only throw error at runtime when actually making API calls
+if (!apiKey && process.env.NODE_ENV !== 'production') {
+  console.warn("⚠️ GEMINI_API_KEY is not set - API calls will fail at runtime");
 }
 
-const genAI = new GoogleGenerativeAI(apiKey);
-const genAIClient = new GoogleGenAI({ apiKey });
+// Initialize with dummy key during build, will be replaced at runtime
+const genAI = new GoogleGenerativeAI(apiKey || "build-time-placeholder");
+const genAIClient = new GoogleGenAI({ apiKey: apiKey || "build-time-placeholder" });
 
 /**
  * Available Gemini models (as per official Google AI documentation)
