@@ -161,11 +161,6 @@ npm run start
 - Get your API key: https://www.ncbi.nlm.nih.gov/account/settings/
 - Benefits: Higher rate limits for PubMed searches (10 req/sec vs 3 req/sec)
 
-**Perplexity API Key** (Recommended)
-- Get your API key: https://www.perplexity.ai/settings/api
-- Benefits: Real-time search from 30+ trusted medical sources
-- Cost: ~$5 per 1000 queries
-
 **OpenAlex Email** (Optional)
 - Provide your email for polite pool access
 - Benefits: Better rate limits for OpenAlex API
@@ -352,9 +347,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🔗 Links
 
 - Landing Page: `/`
-- Doctor Mode: `/doctor`
-- General Mode: `/general`
+- Doctor Mode: `/doctors and medical students`
+- General Mode: `/general user`
 
 ---
 
-Built with ❤️ using Next.js, React, and Google Gemini AI
+Built with ❤️ using Kiro, Next.js, React, MedGemma and Google Gemini AI
