@@ -1,8 +1,8 @@
-# Building MedGuidence AI with Kiro: A Development Case Study
+# Building MedGuidance AI with Kiro: A Development Case Study
 
 ## Executive Summary
 
-**MedGuidence AI** is a sophisticated medical AI assistant with 20+ evidence sources, built **entirely using Kiro AI Assistant**. This document demonstrates how Kiro's capabilities in understanding complex requirements, architecting solutions, and implementing production-ready code enabled rapid development of a competition-ready medical application.
+**MedGuidance AI** is a sophisticated medical AI assistant with 20+ evidence sources, built **entirely using Kiro AI Assistant**. This document demonstrates how Kiro's capabilities in understanding complex requirements, architecting solutions, and implementing production-ready code enabled rapid development of a competition-ready medical application.
 
 **Project Stats:**
 - **Lines of Code**: 50,056 lines across 147 production files
@@ -12,9 +12,9 @@
 
 ---
 
-## How Kiro Built MedGuidence AI From Scratch
+## How Kiro Built MedGuidance AI From Scratch
 
-Kiro AI Assistant was not just a helper - it was the **primary architect and developer** of MedGuidence AI. Every line of code, every architectural decision, and every feature was designed and implemented through collaboration with Kiro.
+Kiro AI Assistant was not just a helper - it was the **primary architect and developer** of MedGuidance AI. Every line of code, every architectural decision, and every feature was designed and implemented through collaboration with Kiro.
 
 ### The Complete Development Journey
 
@@ -159,7 +159,7 @@ Kiro designed the complete system architecture:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                         MEDGUIDENCE AI ARCHITECTURE                                  │
+│                         MEDGUIDANCE AI ARCHITECTURE                                  │
 │                         (Designed with Kiro)                                         │
 ├─────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                      │
@@ -459,7 +459,7 @@ if (hasSelfHarmIntent) {
 
 ## Conclusion
 
-MedGuidence AI demonstrates that Kiro is not just a code generator - it's a **strategic development partner** capable of:
+MedGuidance AI demonstrates that Kiro is not just a code generator - it's a **strategic development partner** capable of:
 
 - Understanding complex, domain-specific requirements
 - Designing sophisticated architectures
@@ -478,7 +478,7 @@ The project went from concept to production-ready in a fraction of the time and 
 
 | Field | Value |
 |-------|-------|
-| Project | MedGuidence AI |
+| Project | MedGuidance AI |
 | Development Partner | Kiro AI Assistant |
 | Tech Stack | Next.js 16, React 19, TypeScript 5, Tailwind CSS v4 |
 | AI Model | Google Gemini 2.5 Flash (text), Gemini 2.0 Flash Exp (vision) |

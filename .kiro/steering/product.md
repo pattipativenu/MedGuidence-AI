@@ -2,9 +2,9 @@
 inclusion: always
 ---
 
-# MedGuidence AI - Product Rules
+# MedGuidance AI - Product Rules
 
-MedGuidence AI is a medical AI assistant providing evidence-based clinical information. When working on this codebase, follow these product-specific rules:
+MedGuidance AI is a medical AI assistant providing evidence-based clinical information. When working on this codebase, follow these product-specific rules:
 
 ## Two Distinct Modes
 

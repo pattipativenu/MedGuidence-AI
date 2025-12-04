@@ -840,7 +840,7 @@ export default function DoctorMode() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">MedGuidence AI</h1>
+                  <h1 className="text-xl font-semibold text-gray-900">MedGuidance AI</h1>
                   <p className="text-xs text-gray-500">Doctor Mode</p>
                 </div>
               </button>

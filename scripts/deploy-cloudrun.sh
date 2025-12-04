@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# Deploy MedGuidence AI to Google Cloud Run
+# Deploy MedGuidance AI to Google Cloud Run
 # Usage: ./scripts/deploy-cloudrun.sh
 
 set -e
 
 PROJECT_ID="mediguidence-ai"
-SERVICE_NAME="medguidence-ai"
+SERVICE_NAME="medguidance-ai"
 REGION="us-central1"
 IMAGE_NAME="gcr.io/${PROJECT_ID}/${SERVICE_NAME}:latest"
 
-echo "🚀 Deploying MedGuidence AI to Cloud Run..."
+echo "🚀 Deploying MedGuidance AI to Cloud Run..."
 echo ""
 
 # Step 1: Set project

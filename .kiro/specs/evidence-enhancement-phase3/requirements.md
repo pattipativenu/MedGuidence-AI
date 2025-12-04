@@ -16,7 +16,7 @@ Phase 3 implements precise chunk-level attribution and a comprehensive evaluatio
 - **Ground Truth**: Manually verified correct citations for test queries
 - **Test Set**: Collection of queries with known correct answers for evaluation
 - **Chunk-level Citation**: Citation that references a specific sentence, not entire paper
-- **Evidence System**: The MedGuidence AI evidence retrieval pipeline
+- **Evidence System**: The MedGuidance AI evidence retrieval pipeline
 
 ## Requirements
 

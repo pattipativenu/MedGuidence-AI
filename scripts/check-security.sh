@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Security Check Script for MedGuidence AI
+# Security Check Script for MedGuidance AI
 # Run this before pushing to GitHub
 
 echo "🔒 Running Security Checks..."

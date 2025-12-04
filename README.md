@@ -1,4 +1,4 @@
-# MedGuidence AI
+# MedGuidance AI
 
 An advanced medical AI assistant providing evidence-based clinical information through two specialized modes: **Doctor Mode** for healthcare professionals and **General Mode** for consumers.
 
@@ -137,7 +137,7 @@ An advanced medical AI assistant providing evidence-based clinical information t
 1. **Clone the repository**
 ```bash
 git clone <repository-url>
-cd medguidence-ai
+cd medguidance-ai
 ```
 
 2. **Install dependencies**
@@ -166,7 +166,7 @@ npm run dev
 ```
 
 5. **Open your browser**
-Navigate to [(https://medguidence-ai-473674535154.us-central1.run.app/)]
+Navigate to [(https://medguidance-ai-473674535154.us-central1.run.app/)]
 
 ### Production Build
 
@@ -437,7 +437,7 @@ This is a private medical AI project. For questions or issues, contact the devel
 
 ## 🖼️ Image Credits & Attribution
 
-MedGuidence AI uses medical images from open-access sources with proper attribution:
+MedGuidance AI uses medical images from open-access sources with proper attribution:
 
 ### Active Image Sources
 
@@ -457,7 +457,7 @@ MedGuidence AI uses medical images from open-access sources with proper attribut
 
 ### How We Display Attribution
 
-Every medical image in MedGuidence AI includes:
+Every medical image in MedGuidance AI includes:
 - **Source badge** on thumbnail (📚 InjuryMap, 🔬 NLM)
 - **Full attribution** accessible via Info (ℹ️) button in lightbox
 - **License information** (CC BY 4.0, Public Domain, etc.)
@@ -478,7 +478,7 @@ See [CREDITS.md](CREDITS.md) for complete attribution details and [HACKATHON_COP
 
 ## ⚠️ Medical Disclaimer
 
-MedGuidence AI is an educational and informational tool. It is NOT a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of qualified healthcare providers with questions regarding medical conditions.
+MedGuidance AI is an educational and informational tool. It is NOT a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of qualified healthcare providers with questions regarding medical conditions.
 
 ## 📄 License
 

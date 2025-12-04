@@ -1,6 +1,6 @@
 # Image Credits & Attribution
 
-MedGuidence AI uses medical images from open-access sources. All images are properly attributed according to their respective licenses.
+MedGuidance AI uses medical images from open-access sources. All images are properly attributed according to their respective licenses.
 
 ## Image Sources
 
@@ -51,7 +51,7 @@ Images from PubMed Central are generally free for reuse with attribution. Specif
 
 ## Attribution in Code
 
-All images in MedGuidence AI include structured attribution data:
+All images in MedGuidance AI include structured attribution data:
 
 ```typescript
 {

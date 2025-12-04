@@ -2,7 +2,7 @@
 /**
  * Verification Script: Evidence-Only Configuration
  * 
- * This script verifies that MedGuidence AI is configured to use
+ * This script verifies that MedGuidance AI is configured to use
  * ONLY evidence-based databases and NOT Google Search.
  */
 

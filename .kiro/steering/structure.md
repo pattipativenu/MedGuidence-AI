@@ -2,7 +2,7 @@
 inclusion: always
 ---
 
-# MedGuidence AI - Project Structure
+# MedGuidance AI - Project Structure
 
 ## Directory Organization
 

@@ -15,7 +15,7 @@ Phase 2 builds on Phase 1's caching infrastructure to add semantic search capabi
 - **Cosine Similarity**: A metric for measuring similarity between embedding vectors
 - **Reranking**: Post-retrieval scoring to improve result relevance
 - **Hybrid Search**: Combining keyword-based and semantic search results
-- **Evidence System**: The MedGuidence AI evidence retrieval pipeline
+- **Evidence System**: The MedGuidance AI evidence retrieval pipeline
 - **PubMed**: Primary medical literature database
 - **Cochrane**: Systematic review database
 

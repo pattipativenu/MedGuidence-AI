@@ -1,14 +1,14 @@
-# MedGuidence AI - Project Document
+# MedGuidance AI - Project Document
 
 ## Project Overview
 
-**MedGuidence AI** is an evidence-based medical AI assistant that provides comprehensive, cited medical insights by integrating 20+ medical databases with Google Gemini AI. The application serves two distinct user groups through specialized modes.
+**MedGuidance AI** is an evidence-based medical AI assistant that provides comprehensive, cited medical insights by integrating 20+ medical databases with Google Gemini AI. The application serves two distinct user groups through specialized modes.
 
 ---
 
 ## Hackathon Category: Frankenstein 🧟
 
-MedGuidence AI fits the **Frankenstein** category - stitching together a chimera of technologies into one powerful application:
+MedGuidance AI fits the **Frankenstein** category - stitching together a chimera of technologies into one powerful application:
 
 - **20+ Medical Database APIs** (PubMed, Cochrane, WHO, CDC, FDA, etc.)
 - **Google Gemini 2.5 Flash** (AI text generation)
@@ -62,7 +62,7 @@ These seemingly incompatible elements combine to create an unexpectedly powerful
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                              MEDGUIDENCE AI SYSTEM                                   │
+│                              MEDGUIDANCE AI SYSTEM                                   │
 ├─────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                      │
 │  USER INPUT                                                                          │
@@ -139,7 +139,7 @@ These seemingly incompatible elements combine to create an unexpectedly powerful
 ## Project Structure
 
 ```
-medguidence-ai/
+medguidance-ai/
 ├── app/                          # Next.js App Router
 │   ├── api/
 │   │   └── chat/route.ts        # Main chat endpoint (streaming)
@@ -288,7 +288,7 @@ medguidence-ai/
 ```bash
 # Clone repository
 git clone <repository-url>
-cd medguidence-ai
+cd medguidance-ai
 
 # Install dependencies
 npm install
@@ -328,7 +328,7 @@ npm run dev
 ---
 ## Disclaimer
 
-MedGuidence AI is an educational tool and decision support system. It is NOT a substitute for professional medical advice, diagnosis, or treatment. Always consult qualified healthcare providers for medical decisions.
+MedGuidance AI is an educational tool and decision support system. It is NOT a substitute for professional medical advice, diagnosis, or treatment. Always consult qualified healthcare providers for medical decisions.
 
 ---
 
