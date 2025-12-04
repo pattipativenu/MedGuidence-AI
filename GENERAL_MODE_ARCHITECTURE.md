@@ -69,7 +69,7 @@ General Mode is a **consumer-friendly health information assistant** designed to
 │                                                       ▼                             │
 │  ┌──────────────────────────────────────────────────────────────────────────────┐   │
 │  │                         EVIDENCE GATHERING                                    │   │
-│  │  • Same 20+ database search as Doctor Mode                                   │   │
+│  │  • Same 57 database search as Doctor Mode                                    │   │
 │  │  • Parallel search for maximum coverage                                      │   │
 │  │  • Returns EvidencePackage with all sources                                  │   │
 │  └──────────────────────────────────────────────────────────────────────────────┘   │
@@ -383,4 +383,4 @@ When explicit self-harm phrases detected:
 ---
 
 **Last Updated**: December 2025
-**Version**: 2.1 (with Safety Net Implementation)
+**Version**: 3.0 (with 57 Evidence Sources Integration)

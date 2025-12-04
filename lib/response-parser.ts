@@ -16,6 +16,8 @@ export interface ParsedMedicalResponse {
  */
 const SECTION_MARKERS = {
   clinical: [
+    "## Clinical Analysis",
+    "**Clinical Analysis**",
     "## TL;DR",
     "**TL;DR**",
     "## Clinical Context",
@@ -29,6 +31,10 @@ const SECTION_MARKERS = {
     "**Overview**",
   ],
   diagnosis: [
+    "## Diagnosis & Logic",
+    "**Diagnosis & Logic**",
+    "## Diagnosis and Logic",
+    "**Diagnosis and Logic**",
     "## Differential Diagnosis",
     "**Differential Diagnosis**",
     "## VISUAL FINDINGS",
@@ -43,6 +49,10 @@ const SECTION_MARKERS = {
     "**Assessment**",
   ],
   treatment: [
+    "## Treatment & Safety",
+    "**Treatment & Safety**",
+    "## Treatment and Safety",
+    "**Treatment and Safety**",
     "## Recommended Approach",
     "**Recommended Approach**",
     "## Drug & Safety",
@@ -61,12 +71,12 @@ const SECTION_MARKERS = {
     "**Safety Considerations**",
   ],
   evidence: [
+    "## Evidence Database",
+    "**Evidence Database**",
     "## Evidence Snapshot",
     "**Evidence Snapshot**",
     "## Citations",
     "**Citations**",
-    "## Evidence Database",
-    "**Evidence Database**",
     "## References",
     "**References**",
     "## Clinical Evidence",
@@ -371,6 +381,24 @@ function cleanSection(content: string): string {
     .replace(/^\n+/, "") // Remove leading newlines
     .replace(/\n+$/, "") // Remove trailing newlines
     .replace(/\n{3,}/g, "\n\n") // Collapse multiple newlines
+    .trim();
+  
+  // Remove AI disclaimer from tab content (it appears separately below tabs)
+  // Match various disclaimer formats
+  cleaned = cleaned.replace(
+    /⚠️\s*\*\*AI-Generated Evidence-Based Response\*\*[\s\S]*?(?=\n\n##|$)/gi,
+    ''
+  );
+  
+  // Also remove standalone disclaimer paragraphs
+  cleaned = cleaned.replace(
+    /This response is generated using evidence from peer-reviewed literature[\s\S]*?professional medical expertise\./gi,
+    ''
+  );
+  
+  // Clean up any extra whitespace left after removal
+  cleaned = cleaned
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
   
   // Transform headings to professional versions

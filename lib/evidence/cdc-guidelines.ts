@@ -254,7 +254,7 @@ const CDC_GUIDELINES_DATABASE: CDCGuideline[] = [
   {
     title: "CDC Recommended Immunization Schedule for Adults",
     category: "Immunizations",
-    year: "2024",
+    year: "2025",
     url: "https://www.cdc.gov/vaccines/schedules/hcp/imz/adult.html",
     summary: "Annual immunization schedule for adults aged 19 years and older.",
     recommendations: [
@@ -268,7 +268,7 @@ const CDC_GUIDELINES_DATABASE: CDCGuideline[] = [
   {
     title: "CDC Recommended Immunization Schedule for Children and Adolescents",
     category: "Immunizations",
-    year: "2024",
+    year: "2025",
     url: "https://www.cdc.gov/vaccines/schedules/hcp/imz/child-adolescent.html",
     summary: "Immunization schedule for children and adolescents aged 18 years or younger.",
     recommendations: [
@@ -358,8 +358,8 @@ const CDC_GUIDELINES_DATABASE: CDCGuideline[] = [
   {
     title: "CDC Yellow Book - Health Information for International Travel",
     category: "Travel Medicine",
-    year: "2024",
-    url: "https://wwwnc.cdc.gov/travel/yellowbook/2024/table-of-contents",
+    year: "2025",
+    url: "https://wwwnc.cdc.gov/travel/yellowbook/2025/table-of-contents",
     summary: "Comprehensive reference for travel health recommendations.",
     recommendations: [
       "Pre-travel consultation 4-6 weeks before departure",

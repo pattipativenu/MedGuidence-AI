@@ -22,22 +22,22 @@ const STUDY_DESIGN_SCORES: Record<string, number> = {
   "meta-analysis": 100,
   "guideline": 95,
   "consensus statement": 90,
-  
+
   // High quality
   "randomized controlled trial": 85,
   "rct": 85,
   "double-blind": 85,
-  
+
   // Moderate quality
   "cohort study": 70,
   "prospective": 70,
   "case-control": 65,
-  
+
   // Lower quality
   "cross-sectional": 50,
   "case series": 40,
   "case report": 30,
-  
+
   // Lowest quality
   "expert opinion": 20,
   "editorial": 15,
@@ -50,9 +50,9 @@ const STUDY_DESIGN_SCORES: Record<string, number> = {
 function scoreStudyDesign(publicationType: string[]): { score: number; reasoning: string } {
   let maxScore = 0;
   let matchedType = "unknown";
-  
+
   const typesLower = publicationType.map(t => t.toLowerCase());
-  
+
   for (const [design, score] of Object.entries(STUDY_DESIGN_SCORES)) {
     if (typesLower.some(t => t.includes(design))) {
       if (score > maxScore) {
@@ -61,13 +61,13 @@ function scoreStudyDesign(publicationType: string[]): { score: number; reasoning
       }
     }
   }
-  
+
   // Default score for unknown types
   if (maxScore === 0) {
     maxScore = 50;
     matchedType = "standard research article";
   }
-  
+
   return {
     score: maxScore,
     reasoning: `Study design: ${matchedType} (${maxScore}/100)`,
@@ -81,10 +81,10 @@ function scoreSampleSize(enrollment?: number): { score: number; reasoning: strin
   if (!enrollment) {
     return { score: 50, reasoning: "Sample size not specified" };
   }
-  
+
   let score = 0;
   let category = "";
-  
+
   if (enrollment >= 10000) {
     score = 100;
     category = "very large";
@@ -104,7 +104,7 @@ function scoreSampleSize(enrollment?: number): { score: number; reasoning: strin
     score = 40;
     category = "small";
   }
-  
+
   return {
     score,
     reasoning: `Sample size: ${enrollment} participants (${category}, ${score}/100)`,
@@ -118,14 +118,14 @@ function scoreRecency(year?: string | number): { score: number; reasoning: strin
   if (!year) {
     return { score: 50, reasoning: "Publication year not specified" };
   }
-  
+
   const pubYear = typeof year === "string" ? parseInt(year) : year;
   const currentYear = new Date().getFullYear();
   const age = currentYear - pubYear;
-  
+
   let score = 0;
   let category = "";
-  
+
   if (age <= 1) {
     score = 100;
     category = "very recent";
@@ -145,7 +145,7 @@ function scoreRecency(year?: string | number): { score: number; reasoning: strin
     score = 20;
     category = "old";
   }
-  
+
   return {
     score,
     reasoning: `Published ${pubYear} (${age} years ago, ${category}, ${score}/100)`,
@@ -159,10 +159,10 @@ function scoreCitations(citationCount?: number): { score: number; reasoning: str
   if (!citationCount) {
     return { score: 50, reasoning: "Citation count not available" };
   }
-  
+
   let score = 0;
   let category = "";
-  
+
   if (citationCount >= 1000) {
     score = 100;
     category = "highly influential";
@@ -185,7 +185,7 @@ function scoreCitations(citationCount?: number): { score: number; reasoning: str
     score = 20;
     category = "not yet cited";
   }
-  
+
   return {
     score,
     reasoning: `${citationCount} citations (${category}, ${score}/100)`,
@@ -205,7 +205,7 @@ export function scoreEvidence(evidence: {
   const sizeScore = scoreSampleSize(evidence.enrollment);
   const recencyScore = scoreRecency(evidence.publicationYear);
   const citationScore = scoreCitations(evidence.citationCount);
-  
+
   // Weighted average: design (40%), citations (25%), recency (20%), size (15%)
   const overall = Math.round(
     designScore.score * 0.4 +
@@ -213,7 +213,7 @@ export function scoreEvidence(evidence: {
     recencyScore.score * 0.2 +
     sizeScore.score * 0.15
   );
-  
+
   // Determine quality level
   let level: "high" | "moderate" | "low" | "very-low";
   if (overall >= 80) {
@@ -225,7 +225,7 @@ export function scoreEvidence(evidence: {
   } else {
     level = "very-low";
   }
-  
+
   return {
     overall,
     studyDesign: designScore.score,
@@ -252,7 +252,7 @@ export function formatQualityScore(score: EvidenceScore): string {
     "low": "🟠",
     "very-low": "🔴",
   };
-  
+
   return `${levelEmoji[score.level]} Quality: ${score.level.toUpperCase()} (${score.overall}/100)`;
 }
 
@@ -272,4 +272,21 @@ export function getQualityBadgeColor(level: string): string {
     default:
       return "bg-gray-100 text-gray-800 border-gray-200";
   }
+}
+
+/**
+ * Helper to generate badges based on quality score
+ */
+export function getQualityBadges(score: EvidenceScore): string[] {
+  const badges: string[] = [];
+
+  if (score.level === 'high') {
+    badges.push("High Quality");
+  }
+
+  if (score.citations >= 85) { // Influential or higher
+    badges.push("Highly Cited");
+  }
+
+  return badges;
 }

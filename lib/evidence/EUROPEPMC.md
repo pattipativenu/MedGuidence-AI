@@ -56,8 +56,8 @@ TITLE:"machine learning"
 JOURNAL:"Nature"
 
 // Search by publication year
-PUB_YEAR:2024
-PUB_YEAR:[2020 TO 2024]
+PUB_YEAR:2025
+PUB_YEAR:[2020 TO 2025]
 
 // Search by MeSH terms
 MESH:"Diabetes Mellitus"
@@ -71,7 +71,7 @@ SRC:PPR        // Preprints
 OPEN_ACCESS:Y
 
 // Combine fields
-TITLE:"cancer" AND AUTH:"Johnson" AND PUB_YEAR:2024
+TITLE:"cancer" AND AUTH:"Johnson" AND PUB_YEAR:2025
 ```
 
 ## Common Use Cases

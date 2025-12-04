@@ -136,20 +136,28 @@ html {
     font-family: var(--font-lora), Georgia, serif;
   }
   
-  /* Question title styling */
+  /* Question title styling - Controlled size with proper spacing */
   .question-title {
     font-family: var(--font-lora), Georgia, serif;
-    font-size: 20px;
-    font-weight: 600;
-    line-height: 1.4;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.3;
     letter-spacing: -0.01em;
-    margin-bottom: 20px;
+    margin-bottom: 32px;
     color: #0F172A;
   }
   
   @media (min-width: 768px) {
     .question-title {
-      font-size: 22px;
+      font-size: 24px;
+      margin-bottom: 36px;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .question-title {
+      font-size: 26px;
+      margin-bottom: 40px;
     }
   }
 
@@ -158,55 +166,80 @@ html {
     font-family: var(--font-lora), Georgia, serif;
     text-align: left;
     max-width: 800px;
-    margin: 0 auto 24px auto;
+    margin: 0 auto 32px auto;
     padding: 0;
   }
 
   .formatted-question .question-main {
-    font-size: 18px;
-    font-weight: 600;
-    line-height: 1.6;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
     color: #0F172A;
-    margin-bottom: 16px;
+    margin-bottom: 32px;
   }
 
   .formatted-question .question-section {
-    font-size: 18px;
-    font-weight: 600;
-    line-height: 1.6;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
     color: #0F172A;
-    margin-bottom: 8px;
+    margin-bottom: 32px;
     padding-left: 0;
   }
 
   .formatted-question .section-label {
-    font-weight: 600;
+    font-weight: 700;
     color: #0F172A;
   }
 
   .formatted-question .section-content {
-    font-weight: 600;
+    font-weight: 700;
     color: #0F172A;
   }
 
   .formatted-question .question-prompt {
-    font-size: 18px;
-    font-weight: 600;
-    line-height: 1.6;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
     color: #0F172A;
-    margin-top: 16px;
+    margin-top: 32px;
     padding-top: 0;
   }
 
   @media (min-width: 768px) {
+    .formatted-question {
+      margin-bottom: 36px;
+    }
     .formatted-question .question-main {
-      font-size: 20px;
+      font-size: 24px;
+      margin-bottom: 36px;
     }
     .formatted-question .question-section {
-      font-size: 20px;
+      font-size: 24px;
+      margin-bottom: 36px;
     }
     .formatted-question .question-prompt {
-      font-size: 20px;
+      font-size: 24px;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .formatted-question {
+      margin-bottom: 40px;
+    }
+    .formatted-question .question-main {
+      font-size: 26px;
+      margin-bottom: 40px;
+    }
+    .formatted-question .question-section {
+      font-size: 26px;
+      margin-bottom: 40px;
+    }
+    .formatted-question .question-prompt {
+      font-size: 26px;
     }
   }
   
@@ -241,32 +274,33 @@ html {
     max-width: 100% !important;
   }
   
-  /* Section headings inside cards */
+  /* Section headings inside cards - H2 (Clinical Evidence, etc.) */
   .content-card h2 {
     font-family: var(--font-lora), Georgia, serif;
     font-size: 20px;
     font-weight: 700;
     line-height: 1.35;
-    margin-top: 32px;
+    margin-top: 24px;
     margin-bottom: 8px;
     color: #0F172A;
     display: block;
     width: 100%;
   }
   
+  /* Sub-section headings - H3 (Pharmacological Management, etc.) */
   .content-card h3 {
     font-family: var(--font-lora), Georgia, serif;
     font-size: 18px;
     font-weight: 600;
     line-height: 1.4;
-    margin-top: 16px;
+    margin-top: 12px;
     margin-bottom: 4px;
     color: #0F172A;
     display: block;
     width: 100%;
   }
   
-  /* Strong text in content - only slightly bolder */
+  /* Strong text in content - only key phrases should be bold */
   .content-card strong {
     font-weight: 600;
     color: #0F172A;

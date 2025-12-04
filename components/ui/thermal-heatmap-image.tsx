@@ -46,7 +46,8 @@ interface ThermalHeatmapImageProps {
 
 /**
  * Convert bounding box to heatmap region
- * Uses TIGHT radius calculation for precise localization
+ * Uses ULTRA-TIGHT radius calculation for PRECISE localization
+ * Based on medical imaging best practices for pathology visualization
  */
 function boundingBoxToHeatmapRegion(
   box: VisualFinding["boundingBoxes"][0],
@@ -58,21 +59,26 @@ function boundingBoxToHeatmapRegion(
   const width = box.xmax - box.xmin;
   const height = box.ymax - box.ymin;
   
-  // Use the AVERAGE of width and height, not max, for more accurate representation
-  // Also cap the radius to prevent overly large heatmaps
-  const rawRadius = (width + height) / 4; // Average radius
-  const maxRadius = 150; // Maximum radius to prevent full-image coverage
-  const radius = Math.min(rawRadius, maxRadius);
+  // ULTRA-TIGHT radius calculation for precise pathology localization
+  // Use 50-60% of the average dimension (not 100%) to focus on actual pathology
+  const avgDimension = (width + height) / 2;
+  const tightRadius = avgDimension * 0.55; // 55% for focused visualization
+  
+  // Stricter maximum radius to prevent large diffuse heatmaps
+  const maxRadius = 120; // Reduced from 150
+  const minRadius = 15; // Minimum for visibility
+  
+  const radius = Math.max(minRadius, Math.min(tightRadius, maxRadius));
 
-  // Map severity to intensity
+  // Map severity to intensity with higher contrast
   const intensityMap: Record<string, number> = {
     critical: 1.0,
-    moderate: 0.7,
-    mild: 0.4,
-    normal: 0.1,
+    moderate: 0.75,
+    mild: 0.5,
+    normal: 0.2,
   };
 
-  console.log(`Heatmap region: ${box.label} at (${centerX}, ${centerY}) with radius ${radius} (raw: ${rawRadius})`);
+  console.log(`🎯 Precise heatmap: ${box.label} at (${centerX}, ${centerY}) radius ${radius.toFixed(0)}px (box: ${width.toFixed(0)}×${height.toFixed(0)})`);
 
   return {
     centerX,
@@ -197,16 +203,16 @@ export const ThermalHeatmapImage: React.FC<ThermalHeatmapImageProps> = ({
           const dy = normY - region.centerY;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
-          // TIGHTER Gaussian falloff - heat should be concentrated on the finding
-          // Use a smaller sigma (radius * 0.6) for more focused heatmaps
-          const sigma = region.radius * 0.6; // Tighter spread
-          const maxDistance = region.radius * 1.2; // Limit the spread distance
+          // ULTRA-TIGHT Gaussian falloff for PRECISE pathology localization
+          // Medical imaging standard: heat should be concentrated exactly on the abnormality
+          const sigma = region.radius * 0.5; // Very tight spread (50% of radius)
+          const maxDistance = region.radius * 1.0; // Hard cutoff at radius boundary
           
           if (distance < maxDistance) {
-            // Sharper Gaussian falloff for more precise localization
+            // Very sharp Gaussian falloff for surgical precision
             const falloff = Math.exp(-(distance * distance) / (2 * sigma * sigma));
-            // Apply a threshold to cut off very low values
-            if (falloff > 0.1) {
+            // Higher threshold to eliminate diffuse spread
+            if (falloff > 0.15) {
               totalHeat += region.intensity * falloff;
             }
           }
@@ -263,11 +269,11 @@ export const ThermalHeatmapImage: React.FC<ThermalHeatmapImageProps> = ({
   // No findings - just show the image
   if (relevantFindings.length === 0) {
     return (
-      <div className={`relative inline-block w-full rounded-lg overflow-hidden bg-black ${compact ? 'max-h-[350px]' : ''}`}>
+      <div className="relative inline-block w-full rounded-lg overflow-hidden bg-black">
         <img
           src={`data:image/png;base64,${imageUrl}`}
           alt={`Medical Image ${fileIndex + 1}`}
-          className={`w-full ${compact ? 'h-full object-contain' : 'h-auto'}`}
+          className={compact ? "w-full max-h-[500px] object-contain" : "w-full h-auto object-contain"}
         />
         <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 to-transparent p-3">
           <div className={`flex items-center gap-2 text-green-400 ${compact ? 'text-sm' : ''}`}>
@@ -282,12 +288,12 @@ export const ThermalHeatmapImage: React.FC<ThermalHeatmapImageProps> = ({
   }
 
   return (
-    <div ref={containerRef} className={`relative inline-block w-full rounded-lg overflow-hidden bg-black group ${compact ? 'max-h-[350px]' : ''}`}>
+    <div ref={containerRef} className="relative inline-block w-full rounded-lg overflow-hidden bg-black group">
       {/* Original Medical Image */}
       <img
         src={`data:image/png;base64,${imageUrl}`}
         alt={`Medical Image ${fileIndex + 1}`}
-        className={`w-full ${compact ? 'h-full object-contain' : 'h-auto'}`}
+        className={compact ? "w-full max-h-[500px] object-contain" : "w-full h-auto object-contain"}
         onLoad={handleImageLoad}
       />
 
@@ -343,49 +349,6 @@ export const ThermalHeatmapImage: React.FC<ThermalHeatmapImageProps> = ({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
         {compact ? 'AI-Detected' : 'AI-Detected Regions'}
-      </div>
-
-      {/* Findings Legend (Bottom Overlay) */}
-      <div className={`absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/90 via-black/70 to-transparent ${compact ? 'p-2 pt-4' : 'p-4 pt-8'}`}>
-        <h4 className={`text-white font-semibold ${compact ? 'mb-1.5 text-xs' : 'mb-3 text-sm'} flex items-center gap-2`}>
-          <svg className={`${compact ? 'w-3 h-3' : 'w-4 h-4'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-          Detected Findings ({relevantFindings.length})
-        </h4>
-        <div className={`space-y-1.5 ${compact ? 'max-h-20' : 'max-h-32'} overflow-y-auto`}>
-          {relevantFindings.map((finding, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className={`flex items-start gap-2 text-white ${compact ? 'text-xs' : 'text-sm'}`}
-            >
-              <span
-                className={`inline-block ${compact ? 'w-2 h-2' : 'w-3 h-3'} rounded-full mt-0.5 shrink-0 ring-2 ring-white/30`}
-                style={{ backgroundColor: getSeverityColor(finding.severity) }}
-              />
-              <div className="flex-1 min-w-0">
-                <span
-                  className={`font-semibold px-1 py-0.5 rounded ${compact ? 'text-[10px]' : 'text-xs'} mr-1`}
-                  style={{
-                    backgroundColor: getSeverityColor(finding.severity),
-                    color: "white",
-                  }}
-                >
-                  {finding.severity.toUpperCase()}
-                </span>
-                <span className={`text-white/90 leading-relaxed ${compact ? 'line-clamp-1' : ''}`}>{finding.description}</span>
-                {!compact && finding.boundingBoxes[0]?.confidence && (
-                  <span className="ml-2 text-xs text-gray-400">
-                    ({Math.round(finding.boundingBoxes[0].confidence * 100)}% confidence)
-                  </span>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </div>
       </div>
 
     </div>

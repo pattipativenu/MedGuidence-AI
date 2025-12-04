@@ -12,7 +12,7 @@ const TESTIMONIALS = [
     organization: "National Library of Medicine",
   },
   {
-    quote: "Synthesizing evidence from 20+ medical databases, MedGuidance AI delivers comprehensive, trustworthy clinical insights in seconds.",
+    quote: "Synthesizing evidence from 57 medical databases, MedGuidance AI delivers comprehensive, trustworthy clinical insights in seconds.",
     author: "Evidence-Based Medicine Initiative",
     organization: "PubMed & Cochrane Partnership",
   },
@@ -270,7 +270,7 @@ export function EvidenceLoadingCompact({ isLoading }: { isLoading: boolean }) {
             {currentSource.name}
           </motion.span>
         </AnimatePresence>
-        <span className="text-sm text-amber-800">and 19+ databases...</span>
+        <span className="text-sm text-amber-800">and 56+ databases...</span>
       </div>
     </motion.div>
   );

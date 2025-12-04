@@ -4,11 +4,69 @@ import { useEffect, useState, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import { motion } from "framer-motion";
+// import { CitationPopup } from "./citation-popup"; // Temporarily disabled
+// import { segmentTextWithCitations } from "@/lib/citation-parser"; // Temporarily disabled
+import type { ParsedReference } from "@/lib/types/citation";
 
 interface MarkdownTypewriterProps {
   content: string;
   speed?: number;
   onComplete?: () => void;
+  references?: ParsedReference[]; // For citation popups
+}
+
+/**
+ * COMMENTED OUT FOR REBUILD
+ * Process React children to wrap citations with popup component
+ */
+function processChildrenForCitations(
+  children: React.ReactNode,
+  references: ParsedReference[]
+): React.ReactNode {
+  // COMMENTED OUT: Citation popup functionality
+  // Will rebuild with new architecture
+  return children;
+  
+  // if (!children || references.length === 0) return children;
+
+  // // Convert children to array
+  // const childArray = Array.isArray(children) ? children : [children];
+
+  // return childArray.map((child, index) => {
+  //   // Only process string children
+  //   if (typeof child !== 'string') return child;
+
+  //   // Segment text with citations
+  //   const segments = segmentTextWithCitations(child);
+
+  //   return segments.map((segment, segIndex) => {
+  //     if (segment.type === 'text') {
+  //       return segment.content;
+  //     }
+
+  //     // Citation segment - wrap with popup
+  //     if (segment.type === 'citation' && segment.citationNumbers) {
+  //       return (
+  //         <CitationPopup
+  //           key={`${index}-${segIndex}`}
+  //           citationNumbers={segment.citationNumbers}
+  //           references={references}
+  //         >
+  //           <sup className="citation-number text-blue-600 hover:text-blue-800 cursor-help font-semibold">
+  //             {segment.citationNumbers.map((num, i) => (
+  //               <span key={num}>
+  //                 {i > 0 && ','}
+  //                 {num}
+  //               </span>
+  //             ))}
+  //           </sup>
+  //         </CitationPopup>
+  //       );
+  //     }
+
+  //     return segment.content;
+  //   });
+  // });
 }
 
 /**
@@ -101,6 +159,7 @@ export default function MarkdownTypewriter({
   content,
   speed = 1, // Much faster default - 1ms per token
   onComplete,
+  references = [],
 }: MarkdownTypewriterProps) {
   const [displayedTokenCount, setDisplayedTokenCount] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
@@ -163,14 +222,15 @@ export default function MarkdownTypewriter({
           ),
           h2: ({ children }) => (
             <h2 
-              className="text-xl font-bold mt-10 mb-3 block w-full" 
+              className="text-xl font-bold block w-full" 
               style={{ 
                 fontFamily: 'var(--font-lora), Georgia, serif', 
                 fontSize: '20px', 
                 fontWeight: 700, 
                 lineHeight: '1.35', 
                 color: '#0F172A',
-                letterSpacing: '-0.01em'
+                marginTop: '24px',
+                marginBottom: '8px'
               }}
             >
               {children}
@@ -178,33 +238,40 @@ export default function MarkdownTypewriter({
           ),
           h3: ({ children }) => (
             <h3 
-              className="text-lg font-semibold mt-6 mb-2 block w-full" 
+              className="text-lg font-semibold block w-full" 
               style={{ 
                 fontFamily: 'var(--font-lora), Georgia, serif', 
                 fontSize: '18px', 
                 fontWeight: 600, 
                 lineHeight: '1.4', 
-                color: '#0F172A' 
+                color: '#0F172A',
+                marginTop: '12px',
+                marginBottom: '4px'
               }}
             >
               {children}
             </h3>
           ),
-          p: ({ children }) => (
-            <p 
-              className="mb-5 w-full max-w-full" 
-              style={{ 
-                fontFamily: 'var(--font-lora), Georgia, serif', 
-                fontSize: '16px', 
-                fontWeight: 400, 
-                lineHeight: '1.8', 
-                color: '#374151',
-                marginTop: '0.5rem'
-              }}
-            >
-              {children}
-            </p>
-          ),
+          p: ({ children }) => {
+            // Process children to wrap citations with popup
+            const processedChildren = processChildrenForCitations(children, references);
+            
+            return (
+              <p 
+                className="w-full max-w-full" 
+                style={{ 
+                  fontFamily: 'var(--font-lora), Georgia, serif', 
+                  fontSize: '16px', 
+                  fontWeight: 400, 
+                  lineHeight: '1.7', 
+                  color: '#1F2937',
+                  marginBottom: '1rem'
+                }}
+              >
+                {processedChildren}
+              </p>
+            );
+          },
           strong: ({ children }) => {
             // Check if this is a section heading (ends with colon or is a known heading)
             const text = String(children);
@@ -213,8 +280,7 @@ export default function MarkdownTypewriter({
             return (
               <strong style={{ 
                 fontWeight: isHeading ? 700 : 600, 
-                color: '#111827',
-                fontSize: isHeading ? '17px' : 'inherit'
+                color: '#0F172A'
               }}>
                 {children}
               </strong>
@@ -222,12 +288,13 @@ export default function MarkdownTypewriter({
           },
           ul: ({ children }) => (
             <ul 
-              className="list-disc mb-5 space-y-2 w-full pl-6" 
+              className="list-disc space-y-2 w-full pl-6" 
               style={{ 
                 fontFamily: 'var(--font-lora), Georgia, serif', 
                 fontSize: '16px', 
-                lineHeight: '1.8', 
-                color: '#374151' 
+                lineHeight: '1.75', 
+                color: '#1F2937',
+                marginBottom: '1rem'
               }}
             >
               {children}
@@ -235,12 +302,13 @@ export default function MarkdownTypewriter({
           ),
           ol: ({ children }) => (
             <ol 
-              className="list-decimal mb-5 space-y-2 w-full pl-6" 
+              className="list-decimal space-y-2 w-full pl-6" 
               style={{ 
                 fontFamily: 'var(--font-lora), Georgia, serif', 
                 fontSize: '16px', 
-                lineHeight: '1.8', 
-                color: '#374151' 
+                lineHeight: '1.75', 
+                color: '#1F2937',
+                marginBottom: '1rem'
               }}
             >
               {children}
@@ -252,8 +320,8 @@ export default function MarkdownTypewriter({
               style={{ 
                 fontFamily: 'var(--font-lora), Georgia, serif', 
                 fontSize: '16px', 
-                lineHeight: '1.8', 
-                color: '#374151',
+                lineHeight: '1.75', 
+                color: '#1F2937',
                 paddingLeft: '0.5rem'
               }}
             >

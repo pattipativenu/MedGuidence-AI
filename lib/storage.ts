@@ -11,6 +11,22 @@ export interface StoredConversation {
   messages: Array<{
     role: 'user' | 'assistant';
     content: string;
+    imageUrls?: string[]; // base64 image data (uploaded by user)
+    visualFindings?: Array<{
+      finding: string;
+      severity: 'critical' | 'moderate' | 'mild';
+      coordinates: [number, number, number, number];
+      label: string;
+      fileIndex?: number;
+    }>; // AI-detected findings with coordinates
+    medicalImages?: Array<{
+      url: string;
+      title: string;
+      source: string;
+      license: string;
+      thumbnail?: string;
+      description?: string;
+    }>; // fetched educational images
   }>;
   mode: 'doctor' | 'general';
   expiresAt: number; // Unix timestamp

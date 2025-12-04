@@ -1,0 +1,20 @@
+{
+  "enabled": true,
+  "name": "Evidence Routing & Reference Hygiene Validator",
+  "description": "Validates that evidence gathering uses the right source types (guidelines, RCTs, meta-analyses) and prevents off-topic references. Ensures 6-10 references with proper balance across evidence hierarchy. Flags bare URLs and irrelevant papers.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "lib/evidence/**/*.ts",
+      "lib/evidence/engine.ts",
+      "lib/evidence/guideline-anchors.ts",
+      "lib/evidence/pubmed.ts",
+      "lib/evidence/cochrane.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Validate evidence routing and reference quality for the modified evidence source. Check:\n\n**1. EVIDENCE TYPE DISTRIBUTION (for Doctor Mode)**\n- Total references: 6-10 (enforce globally)\n- Required breakdown:\n  ✓ At least 1 major society guideline (ACC/AHA, ESC, KDIGO, IDSA, Surviving Sepsis)\n  ✓ At least 1-2 meta-analyses or systematic reviews (Cochrane preferred)\n  ✓ At least 2-3 pivotal RCTs or key observational studies\n  ✓ No more than 1-2 \"Other/Unknown\" sources\n\n**2. REFERENCE QUALITY CHECKS**\n- Flag bare Google search URLs or generic links\n- Verify each reference has:\n  ✓ Real PMID or DOI (not fabricated)\n  ✓ Title matching the clinical question\n  ✓ Proper journal/source attribution\n- Check for off-topic papers:\n  ✗ MINOCA imaging in a DAPT-duration question\n  ✗ HIIT exercise in a sepsis antibiotic question\n  ✗ Unrelated specialty topics\n\n**3. GUIDELINE DETECTION**\n- Verify anchor guidelines are triggered for common scenarios:\n  ✓ Sepsis → Surviving Sepsis Campaign 2021\n  ✓ CAP → IDSA/ATS CAP Guidelines 2019\n  ✓ Diabetes + CKD → ADA 2024 + KDIGO 2022\n  ✓ Heart failure → ACC/AHA/HFSA 2022\n  ✓ AF → ACC/AHA/ACCP/HRS 2023\n- Check if guideline-anchors.ts is being used properly\n\n**4. SOURCE DIVERSITY**\n- Verify use of multiple databases:\n  ✓ PubMed (articles + reviews + guidelines)\n  ✓ Cochrane (systematic reviews)\n  ✓ Europe PMC (recent, cited, open access)\n  ✓ ClinicalTrials.gov (ongoing/completed trials)\n  ✓ Perplexity AI (real-time search)\n- Flag if only using 1-2 sources (e.g., just BMJ Best Practice)\n\n**5. CONFLICT RESOLUTION**\n- Check if multiple guidelines are integrated (not cherry-picked)\n- Verify conflict resolution rules from guideline-anchors.ts:\n  ✓ Prefer most recent guideline when conflicts exist\n  ✓ Prefer multi-society guidelines over single-society\n  ✓ Explicitly state which guideline is followed and why\n\n**ACTION**: If evidence stack is off-balance, suggest:\n- Which source types to add (guideline/meta-analysis/RCT)\n- Which off-topic items to remove\n- How to replace generic URLs with direct article links\n- Reference specific evidence files (pubmed.ts, cochrane.ts, guideline-anchors.ts)"
+  }
+}

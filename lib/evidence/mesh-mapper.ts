@@ -98,22 +98,29 @@ const COMMON_MESH_MAPPINGS: Record<string, string> = {
   'digestion': 'Digestion',
   
   // Musculoskeletal
-  'arthritis': 'Arthritis',
+  'septic arthritis': 'Arthritis, Infectious', // CRITICAL: Must come before generic 'arthritis'
+  'infectious arthritis': 'Arthritis, Infectious',
+  'joint infection': 'Arthritis, Infectious',
   'osteoarthritis': 'Osteoarthritis',
   'rheumatoid arthritis': 'Arthritis, Rheumatoid',
+  'arthritis': 'Arthritis', // Generic - only if more specific terms don't match
   'back pain': 'Back Pain',
   'osteoporosis': 'Osteoporosis',
   'joint pain': 'Arthralgia',
   'muscle pain': 'Myalgia',
   'bone health': 'Bone Density',
+  'synovial fluid': 'Synovial Fluid', // For joint aspiration queries
+  'joint aspiration': 'Arthrocentesis',
   
   // Infectious
   'covid': 'COVID-19',
-  'flu': 'Influenza, Human',
+  'influenza': 'Influenza, Human', // Changed from 'flu' to avoid false matches with 'fluid'
   'sepsis': 'Sepsis',
+  'septic shock': 'Shock, Septic',
   'infection': 'Infection',
   'virus': 'Virus Diseases',
   'bacteria': 'Bacterial Infections',
+  'bacteremia': 'Bacteremia',
   
   // Cancer
   'cancer': 'Neoplasms',
@@ -252,11 +259,25 @@ const COMMON_MESH_MAPPINGS: Record<string, string> = {
 export function mapToMeSHTerms(query: string): string[] {
   const queryLower = query.toLowerCase();
   const meshTerms: string[] = [];
+  const matchedTerms = new Set<string>(); // Track which lay terms we've matched
+  
+  // CRITICAL FIX: Sort by term length (longest first) to match specific terms before generic ones
+  // This ensures "septic arthritis" matches before "arthritis"
+  const sortedMappings = Object.entries(COMMON_MESH_MAPPINGS).sort((a, b) => b[0].length - a[0].length);
   
   // Check for exact matches in curated mappings
-  for (const [layTerm, meshTerm] of Object.entries(COMMON_MESH_MAPPINGS)) {
+  for (const [layTerm, meshTerm] of sortedMappings) {
     if (queryLower.includes(layTerm)) {
-      meshTerms.push(meshTerm);
+      // Avoid adding generic terms if we've already matched a more specific version
+      // e.g., if "septic arthritis" matched, don't also add "arthritis"
+      const isSubsumed = Array.from(matchedTerms).some(matched => 
+        matched.includes(layTerm) && matched !== layTerm
+      );
+      
+      if (!isSubsumed) {
+        meshTerms.push(meshTerm);
+        matchedTerms.add(layTerm);
+      }
     }
   }
   
@@ -356,9 +377,29 @@ async function fetchMeSHSummaries(meshIds: string[]): Promise<MeSHTerm[]> {
 /**
  * Enhance query with MeSH terms
  * Returns improved query string for PubMed search
+ * 
+ * @param query - The clinical query
+ * @param allowedMeshTerms - Optional list of allowed MeSH terms from classification (restricts expansion)
  */
-export function enhanceQueryWithMeSH(query: string): string {
-  const meshTerms = mapToMeSHTerms(query);
+export function enhanceQueryWithMeSH(query: string, allowedMeshTerms?: string[]): string {
+  let meshTerms = mapToMeSHTerms(query);
+  
+  // If allowed MeSH terms are provided, filter to only those
+  if (allowedMeshTerms && allowedMeshTerms.length > 0) {
+    meshTerms = meshTerms.filter(term => 
+      allowedMeshTerms.some(allowed => 
+        term.toLowerCase().includes(allowed.toLowerCase()) || 
+        allowed.toLowerCase().includes(term.toLowerCase())
+      )
+    );
+    
+    // Also add the allowed terms directly if not already present
+    for (const allowed of allowedMeshTerms) {
+      if (!meshTerms.includes(allowed)) {
+        meshTerms.push(allowed);
+      }
+    }
+  }
   
   if (meshTerms.length === 0) {
     return query;

@@ -439,32 +439,112 @@ function isLifestyleOrPreventionQuery(query: string): boolean {
 }
 
 /**
+ * Search for organization-specific guidelines (KDIGO, ACC/AHA, IDSA, etc.)
+ * CRITICAL FIX: Specialized search for major guideline organizations
+ */
+export async function searchOrganizationGuidelines(
+  query: string,
+  organizations: string[],
+  maxResults: number = 10
+): Promise<PubMedArticle[]> {
+  if (organizations.length === 0) return [];
+  
+  // Build organization-specific search
+  const orgPatterns = organizations.map(org => {
+    switch (org.toUpperCase()) {
+      case 'KDIGO':
+      case 'KDOQI':
+        return `(KDIGO[tiab] OR "Kidney Disease Improving Global Outcomes"[tiab] OR KDOQI[tiab] OR "Kidney International"[Journal])`;
+      case 'ACC/AHA':
+      case 'ACC':
+      case 'AHA':
+        return `(ACC[tiab] OR AHA[tiab] OR "American College of Cardiology"[tiab] OR "American Heart Association"[tiab] OR "Journal of the American College of Cardiology"[Journal] OR Circulation[Journal])`;
+      case 'IDSA':
+        return `(IDSA[tiab] OR "Infectious Diseases Society of America"[tiab] OR "Clinical Infectious Diseases"[Journal])`;
+      case 'ESC':
+        return `(ESC[tiab] OR "European Society of Cardiology"[tiab] OR "European Heart Journal"[Journal])`;
+      case 'ADA':
+        return `(ADA[tiab] OR "American Diabetes Association"[tiab] OR "Diabetes Care"[Journal])`;
+      case 'WHO':
+        return `(WHO[tiab] OR "World Health Organization"[tiab])`;
+      case 'CDC':
+        return `(CDC[tiab] OR "Centers for Disease Control"[tiab])`;
+      case 'NICE':
+        return `(NICE[tiab] OR "National Institute for Health and Care Excellence"[tiab])`;
+      default:
+        return `${org}[tiab]`;
+    }
+  }).join(' OR ');
+  
+  const orgQuery = `${query} AND (${orgPatterns}) AND (guideline OR recommendation OR consensus OR statement)`;
+  
+  console.log(`🔍 Searching for ${organizations.join(', ')} guidelines...`);
+  
+  const searchResult = await searchPubMed(orgQuery, maxResults, false, {
+    humansOnly: true,
+    yearsBack: 15, // Look back 15 years for major guidelines
+  });
+  
+  if (searchResult.pmids.length > 0) {
+    console.log(`✅ Found ${searchResult.pmids.length} ${organizations.join('/')} guideline(s)`);
+    return fetchPubMedDetails(searchResult.pmids);
+  }
+  
+  return [];
+}
+
+/**
  * Search for clinical practice guidelines specifically
+ * CRITICAL FIX: Enhanced to find recent guidelines more aggressively
  */
 export async function searchGuidelines(
   query: string,
   maxResults: number = 10
 ): Promise<PubMedArticle[]> {
-  // Search for guidelines and position statements
-  const guidelineQuery = `${query} AND (guideline[pt] OR practice guideline[pt] OR consensus[tiab] OR recommendation[tiab] OR "position statement"[tiab])`;
+  // STRATEGY 1: Search for official guidelines (most specific)
+  const guidelineQuery = `${query} AND (
+    guideline[pt] OR 
+    practice guideline[pt] OR 
+    "clinical practice guideline"[tiab] OR
+    consensus[tiab] OR 
+    recommendation[tiab] OR 
+    "position statement"[tiab] OR
+    "consensus statement"[tiab] OR
+    "clinical guideline"[tiab]
+  )`;
+  
   const searchResult = await searchPubMed(guidelineQuery, maxResults, false, {
     humansOnly: true,
-    yearsBack: 10,
+    yearsBack: 10, // Look back 10 years to catch all recent guidelines
   });
   
-  if (searchResult.pmids.length === 0) return [];
+  if (searchResult.pmids.length === 0) {
+    console.log(`⚠️  No guidelines found with strict search, trying broader search...`);
+    
+    // STRATEGY 2: Broader search if strict search fails
+    const broaderQuery = `${query} AND (guideline OR recommendation OR consensus)`;
+    const broaderResult = await searchPubMed(broaderQuery, maxResults, false, {
+      humansOnly: true,
+      yearsBack: 10,
+    });
+    
+    if (broaderResult.pmids.length === 0) return [];
+    
+    return fetchPubMedDetails(broaderResult.pmids);
+  }
   
   return fetchPubMedDetails(searchResult.pmids);
 }
 
 /**
- * Search for authoritative sources (major medical organizations)
+ * Search for authoritative sources (major medical organizations and journals)
+ * CRITICAL FIX: Added Kidney International and other guideline-publishing journals
  */
 export async function searchAuthoritativeSources(
   query: string,
   maxResults: number = 10
 ): Promise<PubMedArticle[]> {
-  // Search from major medical organizations
+  // Search from major medical organizations and guideline-publishing journals
   const orgQuery = `${query} AND (
     "American Heart Association"[Affiliation] OR 
     "American College of Cardiology"[Affiliation] OR
@@ -474,11 +554,22 @@ export async function searchAuthoritativeSources(
     "American College of Sports Medicine"[Affiliation] OR
     "American Medical Association"[Affiliation] OR
     "National Institutes of Health"[Affiliation] OR
+    "Kidney Disease Improving Global Outcomes"[Affiliation] OR
+    KDIGO[Affiliation] OR
+    "Infectious Diseases Society of America"[Affiliation] OR
+    IDSA[Affiliation] OR
+    "European Society of Cardiology"[Affiliation] OR
+    ESC[Affiliation] OR
     JAMA[Journal] OR
     "New England Journal of Medicine"[Journal] OR
     Lancet[Journal] OR
     Circulation[Journal] OR
-    "Diabetes Care"[Journal]
+    "Diabetes Care"[Journal] OR
+    "Kidney International"[Journal] OR
+    "American Journal of Kidney Diseases"[Journal] OR
+    "Clinical Infectious Diseases"[Journal] OR
+    "European Heart Journal"[Journal] OR
+    "Journal of the American College of Cardiology"[Journal]
   )`;
   
   const searchResult = await searchPubMed(orgQuery, maxResults, false, {
@@ -500,7 +591,9 @@ export async function searchAuthoritativeSources(
  * NOW WITH CACHING: Checks Redis cache before hitting PubMed API
  */
 export async function comprehensivePubMedSearch(
-  query: string
+  query: string,
+  isGuidelineQuery: boolean = false,
+  guidelineBodies: string[] = []
 ): Promise<{ articles: PubMedArticle[]; systematicReviews: PubMedArticle[]; guidelines: PubMedArticle[] }> {
   // PHASE 1 ENHANCEMENT: Check cache first
   // Error handling: If cache fails, continue with API call (graceful degradation)
@@ -522,37 +615,60 @@ export async function comprehensivePubMedSearch(
   // Cache miss - fetch from API
   const isLifestyle = isLifestyleOrPreventionQuery(query);
   
+  // CRITICAL FIX: Always search for guidelines if this is a guideline query
+  const shouldSearchGuidelines = isGuidelineQuery || isLifestyle;
+  
   // Build search promises
+  // INCREASED LIMITS: Get more evidence to build trust with doctors
   const searchPromises: Promise<any>[] = [
-    // General search with quality filters
-    searchPubMed(query, 10, false, {
+    // General search with quality filters - INCREASED from 10 to 15
+    searchPubMed(query, 15, false, {
       humansOnly: true,
       yearsBack: 10,
       hasAbstract: true,
     }),
-    // Systematic reviews
-    searchSystematicReviews(query, 5),
+    // Systematic reviews - INCREASED from 5 to 8
+    searchSystematicReviews(query, 8),
   ];
   
-  // Add guideline search for lifestyle/prevention queries
-  if (isLifestyle) {
-    console.log("🏃 Lifestyle/prevention query detected - adding guideline search");
-    searchPromises.push(searchGuidelines(query, 8));
-    searchPromises.push(searchAuthoritativeSources(query, 5));
+  // Add guideline search for guideline queries or lifestyle/prevention queries
+  if (shouldSearchGuidelines) {
+    if (isGuidelineQuery) {
+      console.log("📋 Guideline query detected - searching for clinical practice guidelines");
+      
+      // CRITICAL FIX: If we have specific guideline bodies (KDIGO, ACC/AHA, etc.), search for them specifically
+      if (guidelineBodies.length > 0) {
+        console.log(`🎯 Searching specifically for ${guidelineBodies.join(', ')} guidelines`);
+        searchPromises.push(searchOrganizationGuidelines(query, guidelineBodies, 15)); // INCREASED from 10 to 15
+      }
+    } else {
+      console.log("🏃 Lifestyle/prevention query detected - adding guideline search");
+    }
+    searchPromises.push(searchGuidelines(query, 15)); // INCREASED from 10 to 15
+    searchPromises.push(searchAuthoritativeSources(query, 12)); // INCREASED from 8 to 12
   }
   
   const results = await Promise.all(searchPromises);
   
-  const [generalSearch, reviewsSearch, guidelinesSearch, authoritativeSearch] = results;
+  // Handle variable number of results based on whether we searched for organization guidelines
+  let generalSearch, reviewsSearch, guidelinesSearch, authoritativeSearch, orgGuidelinesSearch;
+  
+  if (isGuidelineQuery && guidelineBodies.length > 0) {
+    [generalSearch, reviewsSearch, orgGuidelinesSearch, guidelinesSearch, authoritativeSearch] = results;
+  } else {
+    [generalSearch, reviewsSearch, guidelinesSearch, authoritativeSearch] = results;
+    orgGuidelinesSearch = [];
+  }
 
   const articles = generalSearch.pmids.length > 0 
     ? await fetchPubMedSummaries(generalSearch.pmids)
     : [];
   
-  // Combine guidelines from both searches if available
+  // Combine guidelines from all searches if available
   let guidelines: PubMedArticle[] = [];
-  if (isLifestyle) {
+  if (shouldSearchGuidelines) {
     guidelines = [
+      ...(orgGuidelinesSearch || []), // Organization-specific guidelines (KDIGO, ACC/AHA, etc.) - HIGHEST PRIORITY
       ...(guidelinesSearch || []),
       ...(authoritativeSearch || []),
     ];
@@ -563,7 +679,10 @@ export async function comprehensivePubMedSearch(
       seenPmids.add(g.pmid);
       return true;
     });
-    console.log(`📋 Found ${guidelines.length} guideline articles`);
+    console.log(`📋 Found ${guidelines.length} guideline articles from PubMed`);
+    if (orgGuidelinesSearch && orgGuidelinesSearch.length > 0) {
+      console.log(`   ✅ Including ${orgGuidelinesSearch.length} organization-specific guideline(s)`);
+    }
   }
 
   const result = {

@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "General Mode Safety Net Validator",
+  "description": "Validates General Mode crisis detection and consumer-friendly language. Ensures two-level mental health safety (explicit self-harm vs hidden distress), plain English (no jargon), and proper section structure.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "lib/prompts/general-mode-prompt.ts",
+      "app/api/chat/route.ts",
+      "lib/api/chat-helpers.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Validate General Mode safety and language quality:\n\n**1. TWO-LEVEL CRISIS DETECTION**\n\nLevel 1 (Explicit Self-Harm - Hard Stop):\n- Phrases: 'kill myself', 'end my life', 'suicide', 'want to die'\n- Response: Immediate crisis intervention, NO medical advice\n- Bypass all evidence gathering\n\nLevel 2 (Hidden Distress - Soft Safety):\n- Patterns: 'hopeless', 'worthless', 'no way out', 'tired of everything'\n- Response: Normal structure + soft safety paragraph + connection advice\n\n**2. PLAIN ENGLISH ENFORCEMENT**\n\nReplace jargon:\n- 'LDL-C' → 'bad cholesterol'\n- 'HDL-C' → 'good cholesterol'\n- 'Polyphenols' → 'natural plant substances'\n- 'β-glucan' → 'fiber'\n\n**3. SECTION STRUCTURE**\n\nRequired sections:\n- What's Going On (2-3 sentences)\n- Best Things You Can Do (3-4 bullets max)\n- When to See a Doctor (always)\n- Summary (1 sentence)\n- References\n- Follow-Up Questions (3)\n\nOptional (skip for local pain):\n- Foods to Choose\n- Foods to Cut Back\n- Easy Ways to Move\n\nACTION: Flag jargon, verify crisis detection, check structure."
+  }
+}

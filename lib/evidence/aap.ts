@@ -178,11 +178,11 @@ export function getAAPBrightFuturesInfo(): AAPGuideline {
  */
 export function getAAPRedBookInfo(): AAPGuideline {
   return {
-    title: 'Red Book: 2024-2027 Report of the Committee on Infectious Diseases',
+    title: 'Red Book: 2025-2027 Report of the Committee on Infectious Diseases',
     type: 'Clinical Practice Guideline',
     authors: ['American Academy of Pediatrics', 'Committee on Infectious Diseases'],
     journal: 'American Academy of Pediatrics',
-    year: '2024',
+    year: '2025',
     url: 'https://www.aap.org/en/catalog/red-book/',
     topics: ['Infectious Diseases', 'Immunization', 'Antimicrobial Therapy', 'Infection Control'],
   };

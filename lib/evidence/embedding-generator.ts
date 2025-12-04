@@ -14,10 +14,23 @@
  * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5
  */
 
-import { pipeline } from '@xenova/transformers';
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FeatureExtractionPipeline = any;
+
+// Dynamic import to make @xenova/transformers optional
+let pipelineModule: typeof import('@xenova/transformers') | null = null;
+
+async function getPipeline() {
+  if (!pipelineModule) {
+    try {
+      pipelineModule = await import('@xenova/transformers');
+    } catch (error) {
+      console.warn('[EmbeddingGenerator] @xenova/transformers not available:', error);
+      throw new Error('Embedding generation not available in this environment');
+    }
+  }
+  return pipelineModule.pipeline;
+}
 
 export interface EmbeddingGenerator {
   generateEmbedding(text: string): Promise<number[]>;
@@ -50,6 +63,7 @@ export class BioBERTEmbeddingGenerator implements EmbeddingGenerator {
         console.log(`[EmbeddingGenerator] Loading model: ${this.modelName}`);
         const startTime = Date.now();
         
+        const pipeline = await getPipeline();
         this.model = await pipeline('feature-extraction', this.modelName);
         
         const loadTime = Date.now() - startTime;

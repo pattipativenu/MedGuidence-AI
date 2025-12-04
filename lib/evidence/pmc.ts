@@ -170,6 +170,7 @@ export async function searchPMCReviews(
 export async function comprehensivePMCSearch(
   query: string
 ): Promise<{
+  allArticles: PMCArticle[];
   articles: PMCArticle[];
   recentArticles: PMCArticle[];
   reviews: PMCArticle[];
@@ -182,6 +183,7 @@ export async function comprehensivePMCSearch(
     ]);
     
     return {
+      allArticles: articles, // Add this for backward compatibility
       articles,
       recentArticles,
       reviews,
@@ -189,6 +191,7 @@ export async function comprehensivePMCSearch(
   } catch (error) {
     console.error("Error in comprehensive PMC search:", error);
     return {
+      allArticles: [],
       articles: [],
       recentArticles: [],
       reviews: [],

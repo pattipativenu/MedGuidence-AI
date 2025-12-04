@@ -263,13 +263,13 @@ interface Conflict {
       name: "WHO",
       position: "Recommends 3-week interval for mRNA vaccines",
       url: "https://who.int/...",
-      year: "2024"
+      year: "2025"
     },
     {
       name: "CDC",
       position: "Recommends 4-week interval for mRNA vaccines",
       url: "https://cdc.gov/...",
-      year: "2024"
+      year: "2025"
     }
   ],
   severity: "minor", // Different timing, not contradictory

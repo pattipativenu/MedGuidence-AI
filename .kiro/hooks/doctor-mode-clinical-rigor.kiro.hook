@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Doctor Mode Clinical Rigor Enforcer",
+  "description": "Ensures every Doctor Mode response meets OpenEvidence-level clinical standards: 5-8 diverse references, explicit guideline citations with full names, severity scores with risk percentages, and proper evidence hierarchy. Prevents vague recommendations and ensures concrete clinical guidance.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "lib/prompts/doctor-mode-prompt.ts",
+      "app/api/chat/route.ts",
+      "lib/evidence/engine.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Review the Doctor Mode response generation logic for clinical rigor. Verify:\n\n**1. REFERENCE QUALITY (5-8 diverse sources)**\n- Check if responses use 5-8 references (not just 3-4)\n- Verify at least 2 major guidelines cited by FULL NAME + YEAR:\n  ✓ \"Surviving Sepsis Campaign 2021\" (not just \"guidelines\")\n  ✓ \"IDSA/ATS CAP Guidelines 2019\"\n  ✓ \"ACC/AHA/HFSA Heart Failure Guidelines 2022\"\n  ✓ \"ADA Standards of Care 2024\"\n- Ensure at least 1 Cochrane or systematic review\n- Verify 1-2 landmark trials cited by name (DAPA-CKD, EMPEROR-Reduced, CREDENCE)\n- Check source diversity (not just BMJ Best Practice)\n\n**2. SEVERITY SCORES WITH RISK PERCENTAGES**\n- Verify scores include explicit criteria AND risk:\n  ✓ \"qSOFA score of 2 (RR ≥22, altered mentation, SBP ≤100)\"\n  ✓ \"CURB-65 score of 2 (≈9% 30-day mortality)\"\n  ✓ \"Wells score >4 (PE likely, >15% probability)\"\n- Flag if scores lack risk percentages\n\n**3. CONCRETE RECOMMENDATIONS (not vague)**\n- Quick Answer must give specific guidance:\n  ✓ Drug/class with dose range\n  ✓ Duration (e.g., \"3-6 months DAPT\")\n  ✓ Discrete options ranked (preferred/alternative/avoid)\n  ✗ \"Individualized approach\" or \"Cannot be determined\"\n- Clinical Answer must rank options hierarchically\n\n**4. EVIDENCE SYNTHESIS (show consensus)**\n- Check if multiple sources are cited together:\n  ✓ \"Both Surviving Sepsis[[1]] and IDSA/ATS[[2]] recommend...\"\n  ✗ Single source per statement\n- Verify Evidence Summary explains WHY (mechanism, trial data)\n- Ensure no repetition between sections\n\n**5. UNCERTAINTY TRANSPARENCY**\n- Evidence Summary must include:\n  ✓ At least one sentence on evidence gaps/weaknesses\n  ✓ At least one sentence on trade-offs (stroke vs bleeding, MACE vs bleeding)\n  ✓ Absolute or relative risk when available\n\n**ACTION**: If any criteria fail, suggest specific improvements with example text. Reference the EVIDENCE_UTILIZATION_RULES in doctor-mode-prompt.ts."
+  }
+}

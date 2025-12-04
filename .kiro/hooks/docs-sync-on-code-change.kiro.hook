@@ -1,0 +1,22 @@
+{
+  "enabled": true,
+  "name": "Documentation Sync on Code Changes",
+  "description": "Monitors all TypeScript source files (*.ts, *.tsx), configuration files (package.json, tsconfig.json, next.config.ts), and shell scripts (*.sh) for changes. When any of these files are edited, triggers the agent to review the changes and update relevant documentation in README.md or the docs folders (lib/*/README.md, lib/*/*.md) to keep documentation synchronized with code changes.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.ts",
+      "**/*.tsx",
+      "package.json",
+      "tsconfig.json",
+      "next.config.ts",
+      "**/*.sh",
+      "vitest.config.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Source code has been modified. Please review the changes in the edited file(s) and determine if any documentation needs to be updated. Check the following documentation files and update them as needed:\n\n1. README.md - Main project documentation\n2. lib/evidence/README.md - Evidence system documentation\n3. lib/clinical-decision-support/README.md - Clinical decision support documentation\n4. lib/medgem/README.md and lib/medgem/INTEGRATION_GUIDE.md - MedGemma integration docs\n5. Any other relevant .md files in the project\n\nFocus on:\n- API changes that affect usage\n- New features or components added\n- Changed configuration or setup steps\n- Modified architecture or patterns\n- Updated dependencies or requirements\n- New evidence sources or integrations\n\nMake sure documentation accurately reflects the current codebase. Update examples, code snippets, and descriptions as needed."
+  }
+}

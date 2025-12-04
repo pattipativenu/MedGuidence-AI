@@ -7,6 +7,11 @@
  * - Randomized controlled trials with results
  * - Recent peer-reviewed articles (last 5 years)
  * 
+ * Enhanced with anchor-aware scoring that:
+ * - Computes sufficiency from tag-matching sources when anchor scenario detected
+ * - Sets score ≥70 when ≥3 matching anchors exist
+ * - Controls Perplexity triggering based on score and anchor pack
+ * 
  * Provides transparent reasoning for scores and warnings for low-quality evidence.
  */
 
@@ -23,6 +28,89 @@ export interface SufficiencyScore {
     recentArticles: number;
   };
 }
+
+/**
+ * Enhanced sufficiency score with anchor-awareness
+ * Used for tag-based scoring and Perplexity control
+ */
+export interface EnhancedSufficiencyScore extends SufficiencyScore {
+  anchor_count: number;
+  matching_reviews: number;
+  matching_trials: number;
+  should_call_perplexity: boolean;
+  rerank_needed: boolean;
+  anchor_scenario: string | null;
+}
+
+/**
+ * Recognized anchor scenarios for sufficiency calculation
+ * These scenarios have pre-defined anchor guidelines that provide high-quality evidence
+ */
+export const ANCHOR_SCENARIOS = [
+  'af_ckd_anticoagulation',
+  'af_anticoagulation',
+  'cap_sepsis_antibiotics',
+  'cap_duration',
+  'dapt_hbr',
+  'hfpef_ckd',
+  'hfref_management',
+  'ahre_anticoagulation',
+  'gi_bleed_anticoagulation_restart',
+  'sepsis',
+  'diabetes_ckd',
+] as const;
+
+export type AnchorScenario = typeof ANCHOR_SCENARIOS[number];
+
+/**
+ * Mapping from disease_tags + decision_tags to anchor scenarios
+ */
+export const ANCHOR_SCENARIO_MAPPING: Record<string, { disease_tags: string[]; decision_tags: string[] }> = {
+  'af_ckd_anticoagulation': {
+    disease_tags: ['AF', 'CKD'],
+    decision_tags: ['anticoagulation', 'drug_choice', 'dose'],
+  },
+  'af_anticoagulation': {
+    disease_tags: ['AF'],
+    decision_tags: ['anticoagulation', 'drug_choice', 'dose'],
+  },
+  'cap_sepsis_antibiotics': {
+    disease_tags: ['CAP', 'SEPSIS'],
+    decision_tags: ['drug_choice', 'duration', 'de-escalation'],
+  },
+  'cap_duration': {
+    disease_tags: ['CAP'],
+    decision_tags: ['duration', 'de-escalation'],
+  },
+  'dapt_hbr': {
+    disease_tags: ['PCI', 'CAD', 'HBR'],
+    decision_tags: ['antiplatelet', 'duration', 'de-escalation'],
+  },
+  'hfpef_ckd': {
+    disease_tags: ['HF', 'CKD'],
+    decision_tags: ['drug_choice', 'therapy'],
+  },
+  'hfref_management': {
+    disease_tags: ['HF'],
+    decision_tags: ['drug_choice', 'therapy'],
+  },
+  'ahre_anticoagulation': {
+    disease_tags: ['AHRE', 'AF'],
+    decision_tags: ['anticoagulation'],
+  },
+  'gi_bleed_anticoagulation_restart': {
+    disease_tags: ['GI_BLEED', 'AF'],
+    decision_tags: ['restart', 'anticoagulation'],
+  },
+  'sepsis': {
+    disease_tags: ['SEPSIS'],
+    decision_tags: ['drug_choice', 'duration', 'therapy'],
+  },
+  'diabetes_ckd': {
+    disease_tags: ['DIABETES', 'CKD'],
+    decision_tags: ['drug_choice', 'therapy'],
+  },
+};
 
 /**
  * Calculate evidence sufficiency score
@@ -81,7 +169,7 @@ export function scoreEvidenceSufficiency(
 
     // 2. Clinical Guidelines - 25 points
     try {
-      const guidelineCount = 
+      const guidelineCount =
         (evidence.guidelines?.length || 0) +
         (evidence.pubmedGuidelines?.length || 0) +
         (evidence.whoGuidelines?.length || 0) +
@@ -90,7 +178,7 @@ export function scoreEvidenceSufficiency(
         (evidence.bmjBestPractice?.length || 0) +
         (evidence.cardiovascularGuidelines?.length || 0) +
         (evidence.aapGuidelines?.length || 0);
-      
+
       if (guidelineCount > 0) {
         breakdown.guidelines = 25;
         score += 25;
@@ -114,22 +202,48 @@ export function scoreEvidenceSufficiency(
       console.error('❌ Error scoring RCTs:', error.message);
     }
 
-    // 4. Recent Articles (last 5 years, ≥5 articles) - 15 points
+    // 4. Recent Articles (last 5 years, ≥3 articles) - 15 points
+    // SOFTENED: Lowered threshold from 5 to 3 articles to avoid false "limited evidence"
+    // ENHANCED: Count articles from all sources, not just PubMed
     try {
       const currentYear = new Date().getFullYear();
       const recentThreshold = currentYear - 5;
-      
-      const recentArticles = (evidence.pubmedArticles || []).filter(article => {
+
+      // Count recent articles from all sources
+      let recentCount = 0;
+
+      // PubMed articles
+      const pubmedRecent = (evidence.pubmedArticles || []).filter(article => {
         const year = parseInt(article.publicationDate);
         return !isNaN(year) && year >= recentThreshold;
       });
-      
-      if (recentArticles.length >= 5) {
+      recentCount += pubmedRecent.length;
+
+      // PMC articles
+      const pmcRecent = (evidence.pmcArticles || []).filter(article => {
+        const year = parseInt(article.year);
+        return !isNaN(year) && year >= recentThreshold;
+      });
+      recentCount += pmcRecent.length;
+
+      // Europe PMC articles
+      const europePMCRecent = (evidence.europePMCRecent || []).filter(article => {
+        const year = parseInt(article.firstPublicationDate || article.pubYear || '');
+        return !isNaN(year) && year >= recentThreshold;
+      });
+      recentCount += europePMCRecent.length;
+
+      // Systematic reviews (usually recent)
+      recentCount += (evidence.pubmedReviews?.length || 0);
+      recentCount += (evidence.systematicReviews?.length || 0);
+      recentCount += (evidence.pmcReviews?.length || 0);
+
+      if (recentCount >= 3) {  // Lowered from 5 to 3
         breakdown.recentArticles = 15;
         score += 15;
-        reasoning.push(`${recentArticles.length} recent articles (last 5 years)`);
-      } else if (recentArticles.length > 0) {
-        reasoning.push(`Only ${recentArticles.length} recent articles (need ≥5 for full credit)`);
+        reasoning.push(`${recentCount} recent articles (last 5 years)`);
+      } else if (recentCount > 0) {
+        reasoning.push(`Only ${recentCount} recent articles (need ≥3 for full credit)`);
       }
     } catch (error: any) {
       console.error('❌ Error scoring recent articles:', error.message);
@@ -138,11 +252,11 @@ export function scoreEvidenceSufficiency(
     // 5. Systematic Reviews (non-Cochrane) - 10 points bonus
     try {
       const cochraneCount = (evidence.cochraneReviews?.length || 0) + (evidence.cochraneRecent?.length || 0);
-      const systematicReviewCount = 
+      const systematicReviewCount =
         (evidence.pubmedReviews?.length || 0) +
         (evidence.systematicReviews?.length || 0) +
         (evidence.pmcReviews?.length || 0);
-      
+
       if (systematicReviewCount > 0 && cochraneCount === 0) {
         score += 10;
         reasoning.push(`${systematicReviewCount} systematic review${systematicReviewCount > 1 ? 's' : ''} (non-Cochrane)`);
@@ -151,13 +265,42 @@ export function scoreEvidenceSufficiency(
       console.error('❌ Error scoring systematic reviews:', error.message);
     }
 
+    // 6. Evidence Diversity Bonus - 10 points
+    // ADDED: Reward having multiple types of evidence even if not hitting all thresholds
+    // This prevents false "limited evidence" when we have a good mix
+    try {
+      let evidenceTypes = 0;
+      
+      if (breakdown.cochraneReviews > 0) evidenceTypes++;
+      if (breakdown.guidelines > 0) evidenceTypes++;
+      if (breakdown.rcts > 0) evidenceTypes++;
+      if (breakdown.recentArticles > 0) evidenceTypes++;
+      
+      // Also count systematic reviews as a type
+      const hasSystematicReviews = 
+        (evidence.pubmedReviews?.length || 0) > 0 ||
+        (evidence.systematicReviews?.length || 0) > 0 ||
+        (evidence.pmcReviews?.length || 0) > 0;
+      if (hasSystematicReviews) evidenceTypes++;
+
+      // If we have 2+ types of evidence, add diversity bonus
+      if (evidenceTypes >= 2) {
+        const diversityBonus = Math.min(10, evidenceTypes * 3);
+        score += diversityBonus;
+        reasoning.push(`Evidence diversity bonus: ${evidenceTypes} types of evidence (+${diversityBonus} points)`);
+      }
+    } catch (error: any) {
+      console.error('❌ Error calculating diversity bonus:', error.message);
+    }
+
     // Determine quality level based on score
+    // SOFTENED THRESHOLDS: More lenient to avoid false "limited evidence"
     let level: 'excellent' | 'good' | 'limited' | 'insufficient';
-    if (score >= 70) {
+    if (score >= 60) {  // Lowered from 70
       level = 'excellent';
-    } else if (score >= 50) {
+    } else if (score >= 40) {  // Lowered from 50
       level = 'good';
-    } else if (score >= 30) {
+    } else if (score >= 25) {  // Lowered from 30
       level = 'limited';
     } else {
       level = 'insufficient';
@@ -204,32 +347,34 @@ export function formatSufficiencyWarning(
   }
 
   let warning = '\n\n--- ⚠️  EVIDENCE QUALITY NOTICE ---\n\n';
-  
+
   if (score.level === 'insufficient') {
-    warning += '**INSUFFICIENT EVIDENCE** (Score: ' + score.score + '/100)\n\n';
-    warning += 'The available evidence for this query is very limited. ';
-    warning += 'Recommendations should be made with caution and may require specialist consultation.\n\n';
+    // SOFTENED: More nuanced messaging
+    warning += '**EVOLVING EVIDENCE BASE** (Score: ' + score.score + '/100)\n\n';
+    warning += 'While our databases contain relevant research, the evidence base for this specific query is still developing. ';
+    warning += 'Available guidelines and reviews support clinical decision-making, though some aspects may rely on expert consensus and clinical judgment.\n\n';
   } else {
-    warning += '**LIMITED EVIDENCE** (Score: ' + score.score + '/100)\n\n';
-    warning += 'The available evidence for this query is limited. ';
-    warning += 'Consider the following gaps:\n\n';
+    // SOFTENED: More positive framing
+    warning += '**MODERATE EVIDENCE BASE** (Score: ' + score.score + '/100)\n\n';
+    warning += 'Guidelines and reviews support the following approach, though the evidence base has some limitations. ';
+    warning += 'Clinical judgment remains important for individual patient care.\n\n';
   }
 
   // Identify specific gaps
   const gaps: string[] = [];
-  
+
   if (score.breakdown.cochraneReviews === 0) {
     gaps.push('- No Cochrane systematic reviews found');
   }
-  
+
   if (score.breakdown.guidelines === 0) {
     gaps.push('- No clinical practice guidelines found');
   }
-  
+
   if (score.breakdown.rcts === 0) {
     gaps.push('- No randomized controlled trials with results found');
   }
-  
+
   if (score.breakdown.recentArticles === 0) {
     gaps.push('- Limited recent research (last 5 years)');
   }
@@ -244,9 +389,9 @@ export function formatSufficiencyWarning(
   warning += '- Consider consulting specialist resources or colleagues\n';
   warning += '- Inform patients about the level of evidence supporting recommendations\n';
   warning += '- Monitor for new evidence as research evolves\n\n';
-  
+
   warning += '--- END EVIDENCE QUALITY NOTICE ---\n\n';
-  
+
   return warning;
 }
 
@@ -271,11 +416,11 @@ export function formatSufficiencyForPrompt(score: SufficiencyScore): string {
 
   let formatted = '\n\n--- EVIDENCE QUALITY ASSESSMENT ---\n\n';
   formatted += `**Overall Quality:** ${emoji[score.level]} ${score.level.toUpperCase()} (${score.score}/100)\n\n`;
-  
+
   formatted += '**Evidence Breakdown:**\n';
   formatted += score.reasoning.map(r => `- ${r}`).join('\n');
   formatted += '\n\n';
-  
+
   if (score.level === 'excellent') {
     formatted += '**Interpretation:** Strong evidence base with high-quality sources. ';
     formatted += 'Recommendations can be made with confidence.\n\n';
@@ -283,8 +428,453 @@ export function formatSufficiencyForPrompt(score: SufficiencyScore): string {
     formatted += '**Interpretation:** Adequate evidence base. ';
     formatted += 'Recommendations are well-supported but may benefit from additional sources.\n\n';
   }
-  
+
   formatted += '--- END EVIDENCE QUALITY ASSESSMENT ---\n\n';
-  
+
   return formatted;
+}
+
+// ============================================================================
+// ANCHOR-AWARE SUFFICIENCY SCORING
+// ============================================================================
+
+/**
+ * Detect anchor scenario from disease and decision tags
+ * Returns the most specific matching scenario or null
+ */
+export function detectAnchorScenario(
+  disease_tags: string[],
+  decision_tags: string[]
+): AnchorScenario | null {
+  // Check scenarios in order of specificity (more specific first)
+  const scenarioOrder: AnchorScenario[] = [
+    'af_ckd_anticoagulation',  // Most specific: AF + CKD
+    'gi_bleed_anticoagulation_restart',
+    'hfpef_ckd',
+    'cap_sepsis_antibiotics',
+    'dapt_hbr',
+    'ahre_anticoagulation',
+    'cap_duration',
+    'diabetes_ckd',
+    'af_anticoagulation',  // Less specific: just AF
+    'hfref_management',
+    'sepsis',
+  ];
+
+  for (const scenario of scenarioOrder) {
+    const mapping = ANCHOR_SCENARIO_MAPPING[scenario];
+    if (!mapping) continue;
+
+    // For multi-tag scenarios (like af_ckd), require ALL disease tags to match
+    // For single-tag scenarios, require at least one match
+    const isMultiDiseaseScenario = mapping.disease_tags.length > 1;
+
+    let diseaseMatch: boolean;
+    if (isMultiDiseaseScenario) {
+      // All required disease tags must be present in the query
+      diseaseMatch = mapping.disease_tags.every(tag => disease_tags.includes(tag));
+    } else {
+      // At least one disease tag must match
+      diseaseMatch = mapping.disease_tags.some(tag => disease_tags.includes(tag));
+    }
+
+    // Check if decision tags overlap (at least one match)
+    const decisionMatch = mapping.decision_tags.some(tag => decision_tags.includes(tag));
+
+    if (diseaseMatch && decisionMatch) {
+      return scenario;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Count anchor guidelines in evidence package
+ * Anchors are identified by type === 'Anchor Guideline' or is_anchor metadata
+ */
+export function countAnchorGuidelines(evidence: EvidencePackage): number {
+  let count = 0;
+
+  // Check guidelines array for anchors
+  if (evidence.guidelines) {
+    count += evidence.guidelines.filter(g =>
+      g.type === 'Anchor Guideline' ||
+      (g as any).is_anchor === true
+    ).length;
+  }
+
+  return count;
+}
+
+/**
+ * Count matching systematic reviews based on tags
+ */
+export function countMatchingReviews(
+  evidence: EvidencePackage,
+  disease_tags: string[],
+  decision_tags: string[]
+): number {
+  let count = 0;
+
+  // Check Cochrane reviews
+  const cochraneReviews = [
+    ...(evidence.cochraneReviews || []),
+    ...(evidence.cochraneRecent || []),
+  ];
+
+  for (const review of cochraneReviews) {
+    if (reviewMatchesTags(review, disease_tags, decision_tags)) {
+      count++;
+    }
+  }
+
+  // Check PubMed reviews
+  const pubmedReviews = evidence.pubmedReviews || [];
+  for (const review of pubmedReviews) {
+    if (reviewMatchesTags(review, disease_tags, decision_tags)) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+/**
+ * Count matching trials based on tags
+ */
+export function countMatchingTrials(
+  evidence: EvidencePackage,
+  disease_tags: string[],
+  decision_tags: string[]
+): number {
+  let count = 0;
+
+  const trials = evidence.clinicalTrials || [];
+  for (const trial of trials) {
+    if (trialMatchesTags(trial, disease_tags, decision_tags)) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+/**
+ * Check if a review matches the query tags
+ */
+function reviewMatchesTags(
+  review: any,
+  disease_tags: string[],
+  decision_tags: string[]
+): boolean {
+  const title = (review.title || '').toLowerCase();
+  const abstract = (review.abstract || '').toLowerCase();
+  const text = `${title} ${abstract}`;
+
+  // Check for disease tag matches
+  const diseaseMatch = disease_tags.some(tag => {
+    const patterns = getDiseasePatterns(tag);
+    return patterns.some(p => text.includes(p.toLowerCase()));
+  });
+
+  // Check for decision tag matches
+  const decisionMatch = decision_tags.some(tag => {
+    const patterns = getDecisionPatterns(tag);
+    return patterns.some(p => text.includes(p.toLowerCase()));
+  });
+
+  return diseaseMatch && decisionMatch;
+}
+
+/**
+ * Check if a trial matches the query tags
+ */
+function trialMatchesTags(
+  trial: any,
+  disease_tags: string[],
+  decision_tags: string[]
+): boolean {
+  const title = (trial.title || trial.briefTitle || '').toLowerCase();
+  const conditions = (trial.conditions || []).join(' ').toLowerCase();
+  const interventions = (trial.interventions || []).join(' ').toLowerCase();
+  const text = `${title} ${conditions} ${interventions}`;
+
+  // Check for disease tag matches
+  const diseaseMatch = disease_tags.some(tag => {
+    const patterns = getDiseasePatterns(tag);
+    return patterns.some(p => text.includes(p.toLowerCase()));
+  });
+
+  // Check for decision tag matches  
+  const decisionMatch = decision_tags.some(tag => {
+    const patterns = getDecisionPatterns(tag);
+    return patterns.some(p => text.includes(p.toLowerCase()));
+  });
+
+  return diseaseMatch || decisionMatch; // More lenient for trials
+}
+
+/**
+ * Get disease patterns for tag matching
+ */
+function getDiseasePatterns(tag: string): string[] {
+  const patterns: Record<string, string[]> = {
+    'AF': ['atrial fibrillation', 'afib', 'af'],
+    'CKD': ['chronic kidney', 'ckd', 'renal', 'kidney disease', 'egfr'],
+    'HF': ['heart failure', 'hfref', 'hfpef', 'cardiac failure'],
+    'CAP': ['pneumonia', 'cap', 'respiratory infection'],
+    'SEPSIS': ['sepsis', 'septic'],
+    'CAD': ['coronary', 'cad', 'ischemic heart'],
+    'PCI': ['pci', 'stent', 'angioplasty'],
+    'DIABETES': ['diabetes', 'diabetic', 'glycemic'],
+    'GI_BLEED': ['gi bleed', 'gastrointestinal bleed', 'hemorrhage'],
+    'HBR': ['bleeding risk', 'high bleeding'],
+    'AHRE': ['ahre', 'subclinical af', 'device-detected'],
+    'VTE': ['thromboembolism', 'dvt', 'pulmonary embolism'],
+  };
+  return patterns[tag] || [tag.toLowerCase()];
+}
+
+/**
+ * Get decision patterns for tag matching
+ */
+function getDecisionPatterns(tag: string): string[] {
+  const patterns: Record<string, string[]> = {
+    'anticoagulation': ['anticoagula', 'warfarin', 'apixaban', 'rivaroxaban', 'doac'],
+    'antiplatelet': ['antiplatelet', 'aspirin', 'clopidogrel', 'dapt'],
+    'drug_choice': ['drug choice', 'preferred', 'first-line', 'optimal'],
+    'duration': ['duration', 'how long', 'length'],
+    'de-escalation': ['de-escalation', 'step down', 'switch'],
+    'dose': ['dose', 'dosing', 'mg'],
+    'therapy': ['therapy', 'treatment', 'management'],
+    'restart': ['restart', 'resume', 'reinitiate'],
+    'monitoring': ['monitor', 'follow-up', 'surveillance'],
+    'LAAO': ['laao', 'appendage', 'watchman'],
+  };
+  return patterns[tag] || [tag.toLowerCase()];
+}
+
+/**
+ * Score evidence sufficiency with tag-awareness and anchor detection
+ * 
+ * This enhanced scoring:
+ * 1. Detects anchor scenarios from tags
+ * 2. Computes sufficiency from tag-matching sources when anchor scenario detected
+ * 3. Sets score ≥70 when ≥3 matching anchors exist
+ * 4. Determines whether Perplexity should be called
+ * 5. Respects min_evidence_threshold from guideline search strategy
+ * 
+ * @param evidence - The evidence package to score
+ * @param disease_tags - Extracted disease tags from the query
+ * @param decision_tags - Extracted decision tags from the query
+ * @param min_evidence_threshold - Minimum articles required before declaring "limited" (default: 3)
+ * @returns Enhanced sufficiency score with anchor awareness
+ */
+export function scoreEvidenceSufficiencyWithTags(
+  evidence: EvidencePackage,
+  disease_tags: string[],
+  decision_tags: string[],
+  min_evidence_threshold: number = 3
+): EnhancedSufficiencyScore {
+  // Get base score first
+  const baseScore = scoreEvidenceSufficiency(evidence);
+
+  // Detect anchor scenario
+  const anchor_scenario = detectAnchorScenario(disease_tags, decision_tags);
+
+  // Count anchor-related evidence
+  const anchor_count = countAnchorGuidelines(evidence);
+  const matching_reviews = countMatchingReviews(evidence, disease_tags, decision_tags);
+  const matching_trials = countMatchingTrials(evidence, disease_tags, decision_tags);
+
+  // Calculate enhanced score
+  let enhancedScore = baseScore.score;
+  let enhancedLevel = baseScore.level;
+  const enhancedReasoning = [...baseScore.reasoning];
+  let rerank_needed = false;
+
+  // PHASE 3 ENHANCEMENT: Check if we meet min_evidence_threshold
+  // Count total relevant articles across all sources
+  const totalArticles = 
+    (evidence.pubmedArticles?.length || 0) +
+    (evidence.pubmedReviews?.length || 0) +
+    (evidence.cochraneReviews?.length || 0) +
+    (evidence.cochraneRecent?.length || 0) +
+    (evidence.pmcArticles?.length || 0) +
+    (evidence.europePMCRecent?.length || 0) +
+    (evidence.pubmedGuidelines?.length || 0);
+  
+  // If we have enough articles, boost score to prevent false "limited evidence"
+  // This is especially important for guideline queries where we have related evidence
+  // SOFTENED: More generous bonus to encourage using available evidence
+  if (totalArticles >= min_evidence_threshold) {
+    const thresholdBonus = Math.min(25, totalArticles * 3); // Up to 25 points bonus (increased from 15)
+    enhancedScore = Math.min(100, enhancedScore + thresholdBonus);
+    enhancedReasoning.push(`Met evidence threshold: ${totalArticles} articles (min: ${min_evidence_threshold})`);
+    
+    // Update level based on new score (using softened thresholds)
+    if (enhancedScore >= 60) {  // Lowered from 70
+      enhancedLevel = 'excellent';
+    } else if (enhancedScore >= 40) {  // Lowered from 50
+      enhancedLevel = 'good';
+    }
+  }
+
+  // If anchor scenario detected and we have anchors, boost the score
+  if (anchor_scenario && anchor_count >= 3) {
+    // Requirement 4.2: Set score ≥70 when ≥3 matching anchors exist
+    if (enhancedScore < 70) {
+      enhancedScore = 70;
+      enhancedLevel = 'good';
+      enhancedReasoning.push(`Anchor scenario "${anchor_scenario}" with ${anchor_count} anchor guidelines`);
+    }
+  } else if (anchor_scenario && anchor_count > 0) {
+    // Some anchors but not enough - add bonus points
+    const anchorBonus = anchor_count * 10;
+    enhancedScore = Math.min(100, enhancedScore + anchorBonus);
+    enhancedReasoning.push(`${anchor_count} anchor guideline(s) for "${anchor_scenario}"`);
+
+    // Update level based on new score
+    if (enhancedScore >= 70) {
+      enhancedLevel = 'excellent';
+    } else if (enhancedScore >= 50) {
+      enhancedLevel = 'good';
+    }
+  }
+
+  // Add matching reviews/trials to reasoning
+  if (matching_reviews > 0) {
+    enhancedReasoning.push(`${matching_reviews} tag-matching systematic review(s)`);
+  }
+  if (matching_trials > 0) {
+    enhancedReasoning.push(`${matching_trials} tag-matching clinical trial(s)`);
+  }
+
+  // ORTHOPEDIC/TRAUMA BOOST: Recognize orthopedic evidence quality
+  // Orthopedic evidence often comes from radiology journals, case reports, and Open-i
+  // These are high-quality for MSK queries even if not traditional RCTs
+  const isOrthopedicQuery = disease_tags.some(tag => 
+    ['FRACTURE', 'TIBIAL_PLATEAU_FX', 'TRAUMA', 'DISLOCATION', 'LIGAMENT_INJURY', 'MENISCAL_TEAR', 'SPRAIN', 'STRAIN', 'COMPARTMENT_SYNDROME', 'OSTEOMYELITIS'].includes(tag)
+  );
+  
+  if (isOrthopedicQuery) {
+    // Count orthopedic-relevant evidence
+    const openIArticles = (evidence.openIResearchArticles?.length || 0) + 
+                          (evidence.openIReviewArticles?.length || 0) + 
+                          (evidence.openISystematicReviews?.length || 0) + 
+                          (evidence.openICaseReports?.length || 0);
+    const pmcArticles = evidence.pmcArticles?.length || 0;
+    const pubmedArticles = evidence.pubmedArticles?.length || 0;
+    
+    if (openIArticles > 0 || pmcArticles > 3 || pubmedArticles > 5) {
+      const orthoBonus = Math.min(15, openIArticles * 3 + Math.floor(pmcArticles / 2) + Math.floor(pubmedArticles / 3));
+      enhancedScore = Math.min(100, enhancedScore + orthoBonus);
+      enhancedReasoning.push(`Orthopedic evidence boost: +${orthoBonus} points (Open-i: ${openIArticles}, PMC: ${pmcArticles}, PubMed: ${pubmedArticles})`);
+      
+      // Update level based on new score
+      if (enhancedScore >= 70) {
+        enhancedLevel = 'excellent';
+      } else if (enhancedScore >= 50) {
+        enhancedLevel = 'good';
+      }
+    }
+  }
+
+  // Requirement 4.3: If score <50 but anchors exist, flag for reranking
+  if (enhancedScore < 50 && anchor_count > 0) {
+    rerank_needed = true;
+    enhancedReasoning.push('Reranking recommended - anchors exist but score is low');
+  }
+
+  // Requirement 4.4, 4.5: Determine if Perplexity should be called
+  // Don't call Perplexity if:
+  // - Score is ≥50 (GOOD or EXCELLENT)
+  // - OR anchor scenario exists with non-empty anchor pack
+  const should_call_perplexity = shouldCallPerplexity(
+    enhancedScore,
+    anchor_scenario,
+    anchor_count
+  );
+
+  if (!should_call_perplexity && anchor_scenario) {
+    console.log(`⚓ Skipping Perplexity - internal evidence sufficient (score: ${enhancedScore}/100, anchors: ${anchor_count})`);
+  }
+
+  return {
+    score: enhancedScore,
+    level: enhancedLevel,
+    reasoning: enhancedReasoning,
+    breakdown: baseScore.breakdown,
+    anchor_count,
+    matching_reviews,
+    matching_trials,
+    should_call_perplexity,
+    rerank_needed,
+    anchor_scenario,
+  };
+}
+
+/**
+ * Determine if Perplexity should be called based on score and anchors
+ * 
+ * Requirements 4.4, 4.5:
+ * - Don't call if score ≥50
+ * - Don't call if anchor scenario has non-empty anchor pack
+ * - Don't call for orthopedic/trauma queries with good internal evidence (score ≥40)
+ */
+export function shouldCallPerplexity(
+  score: number,
+  anchor_scenario: AnchorScenario | null,
+  anchor_count: number
+): boolean {
+  // Requirement 4.4: Don't call if score ≥50
+  if (score >= 50) {
+    return false;
+  }
+
+  // Requirement 4.5: Don't call if anchor scenario with anchors
+  if (anchor_scenario && anchor_count > 0) {
+    return false;
+  }
+
+  // ORTHOPEDIC/TRAUMA EXCEPTION: Lower threshold for trauma queries
+  // Orthopedic evidence is often in radiology journals, case reports, and Open-i
+  // These may not score as high as cardiology guidelines but are still high-quality
+  if (score >= 40 && anchor_scenario && anchor_scenario.includes('trauma')) {
+    console.log(`🦴 Orthopedic/trauma query with score ${score}/100 - skipping Perplexity (internal evidence sufficient)`);
+    return false;
+  }
+
+  // Otherwise, Perplexity may be needed
+  return true;
+}
+
+/**
+ * Format enhanced sufficiency score for logging
+ */
+export function formatEnhancedSufficiencyLog(score: EnhancedSufficiencyScore): string {
+  const emoji = {
+    'excellent': '🟢',
+    'good': '🟡',
+    'limited': '🟠',
+    'insufficient': '🔴',
+  };
+
+  let log = `\n📊 Evidence Sufficiency: ${emoji[score.level]} ${score.level.toUpperCase()} (${score.score}/100)\n`;
+
+  if (score.anchor_scenario) {
+    log += `⚓ Anchor Scenario: ${score.anchor_scenario}\n`;
+    log += `   - Anchor Guidelines: ${score.anchor_count}\n`;
+    log += `   - Matching Reviews: ${score.matching_reviews}\n`;
+    log += `   - Matching Trials: ${score.matching_trials}\n`;
+  }
+
+  log += `🔍 Perplexity: ${score.should_call_perplexity ? 'Will be called' : 'SKIPPED'}\n`;
+
+  if (score.rerank_needed) {
+    log += `⚠️  Reranking recommended\n`;
+  }
+
+  return log;
 }

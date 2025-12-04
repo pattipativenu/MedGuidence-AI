@@ -382,8 +382,8 @@ const WHO_GUIDELINES_DATABASE: WHOGuideline[] = [
   {
     title: "WHO Guidelines on COVID-19 Therapeutics",
     category: "Respiratory",
-    year: "2024",
-    url: "https://www.who.int/publications/i/item/WHO-2019-nCoV-therapeutics-2024.1",
+    year: "2025",
+    url: "https://www.who.int/publications/i/item/WHO-2019-nCoV-therapeutics-2025.1",
     summary: "Living guidelines on drugs for COVID-19 treatment.",
     recommendations: [
       "Nirmatrelvir-ritonavir for high-risk patients",

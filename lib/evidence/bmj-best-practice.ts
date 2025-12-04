@@ -22,7 +22,7 @@ const BMJ_BEST_PRACTICE_DATABASE: BMJBestPractice[] = [
   {
     title: "Acute Coronary Syndrome",
     category: "Cardiovascular",
-    lastUpdated: "2024",
+    lastUpdated: "2025",
     url: "https://bestpractice.bmj.com/topics/en-us/149",
     summary: "Comprehensive guidance on diagnosis and management of ACS including STEMI and NSTEMI.",
     keyPoints: [
@@ -43,7 +43,7 @@ const BMJ_BEST_PRACTICE_DATABASE: BMJBestPractice[] = [
   {
     title: "Heart Failure",
     category: "Cardiovascular",
-    lastUpdated: "2024",
+    lastUpdated: "2025",
     url: "https://bestpractice.bmj.com/topics/en-us/62",
     summary: "Evidence-based approach to heart failure diagnosis and management.",
     keyPoints: [
@@ -65,7 +65,7 @@ const BMJ_BEST_PRACTICE_DATABASE: BMJBestPractice[] = [
   {
     title: "Community-Acquired Pneumonia",
     category: "Respiratory",
-    lastUpdated: "2024",
+    lastUpdated: "2025",
     url: "https://bestpractice.bmj.com/topics/en-us/67",
     summary: "Diagnosis and treatment of community-acquired pneumonia in adults.",
     keyPoints: [
@@ -86,7 +86,7 @@ const BMJ_BEST_PRACTICE_DATABASE: BMJBestPractice[] = [
   {
     title: "Asthma in Adults",
     category: "Respiratory",
-    lastUpdated: "2024",
+    lastUpdated: "2025",
     url: "https://bestpractice.bmj.com/topics/en-us/38",
     summary: "Comprehensive asthma management in adults.",
     keyPoints: [
@@ -102,7 +102,7 @@ const BMJ_BEST_PRACTICE_DATABASE: BMJBestPractice[] = [
   {
     title: "Type 2 Diabetes Mellitus",
     category: "Endocrinology",
-    lastUpdated: "2024",
+    lastUpdated: "2025",
     url: "https://bestpractice.bmj.com/topics/en-us/24",
     summary: "Evidence-based management of type 2 diabetes.",
     keyPoints: [
@@ -117,7 +117,7 @@ const BMJ_BEST_PRACTICE_DATABASE: BMJBestPractice[] = [
   {
     title: "Diabetic Ketoacidosis",
     category: "Endocrinology",
-    lastUpdated: "2024",
+    lastUpdated: "2025",
     url: "https://bestpractice.bmj.com/topics/en-us/164",
     summary: "Emergency management of diabetic ketoacidosis.",
     keyPoints: [
@@ -133,7 +133,7 @@ const BMJ_BEST_PRACTICE_DATABASE: BMJBestPractice[] = [
   {
     title: "Sepsis in Adults",
     category: "Infectious Diseases",
-    lastUpdated: "2024",
+    lastUpdated: "2025",
     url: "https://bestpractice.bmj.com/topics/en-us/245",
     summary: "Recognition and management of sepsis and septic shock.",
     keyPoints: [
@@ -148,7 +148,7 @@ const BMJ_BEST_PRACTICE_DATABASE: BMJBestPractice[] = [
   {
     title: "Urinary Tract Infection in Adults",
     category: "Infectious Diseases",
-    lastUpdated: "2024",
+    lastUpdated: "2025",
     url: "https://bestpractice.bmj.com/topics/en-us/77",
     summary: "Diagnosis and treatment of UTI in adults.",
     keyPoints: [
@@ -164,7 +164,7 @@ const BMJ_BEST_PRACTICE_DATABASE: BMJBestPractice[] = [
   {
     title: "Acute Ischemic Stroke",
     category: "Neurology",
-    lastUpdated: "2024",
+    lastUpdated: "2025",
     url: "https://bestpractice.bmj.com/topics/en-us/1078",
     summary: "Emergency management of acute ischemic stroke.",
     keyPoints: [
@@ -179,7 +179,7 @@ const BMJ_BEST_PRACTICE_DATABASE: BMJBestPractice[] = [
   {
     title: "Migraine",
     category: "Neurology",
-    lastUpdated: "2024",
+    lastUpdated: "2025",
     url: "https://bestpractice.bmj.com/topics/en-us/10",
     summary: "Diagnosis and management of migraine.",
     keyPoints: [
@@ -195,7 +195,7 @@ const BMJ_BEST_PRACTICE_DATABASE: BMJBestPractice[] = [
   {
     title: "Gastroesophageal Reflux Disease",
     category: "Gastroenterology",
-    lastUpdated: "2024",
+    lastUpdated: "2025",
     url: "https://bestpractice.bmj.com/topics/en-us/82",
     summary: "Management of GERD in adults.",
     keyPoints: [
@@ -211,7 +211,7 @@ const BMJ_BEST_PRACTICE_DATABASE: BMJBestPractice[] = [
   {
     title: "Major Depressive Disorder",
     category: "Mental Health",
-    lastUpdated: "2024",
+    lastUpdated: "2025",
     url: "https://bestpractice.bmj.com/topics/en-us/55",
     summary: "Evidence-based treatment of major depression.",
     keyPoints: [

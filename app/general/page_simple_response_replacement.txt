@@ -1,0 +1,72 @@
+// Simple Response Component for Q&A (no attachments) - CLEAN VERSION
+function SimpleResponse({
+  response,
+  modelUsed,
+  onComplete,
+  showFollowUpQuestions = true,
+  medicalImages,
+  conversationId: propConversationId
+}: {
+  response: string;
+  modelUsed: string;
+  onComplete?: () => void;
+  showFollowUpQuestions?: boolean;
+  medicalImages?: MedicalImage[];
+  conversationId?: string;
+}) {
+  const conversationId = propConversationId || `conv_${Date.now()}`;
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
+  
+  return (
+    <div className="space-y-8">
+      {/* Medical Images */}
+      {medicalImages && medicalImages.length > 0 && (
+        <div className="mb-6">
+          <div className="overflow-x-auto pb-2 -mx-2 px-2">
+            <div className="flex gap-4 min-w-max">
+              {medicalImages.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setLightboxImage({ url: img.url, title: img.title })}
+                  className="w-64 shrink-0 bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:shadow-md hover:border-purple-300 transition-all cursor-pointer group"
+                >
+                  <div className="h-48 bg-gray-100 overflow-hidden relative">
+                    <img
+                      src={img.thumbnail || img.url}
+                      alt={img.title}
+                      className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="p-2 bg-white text-left">
+                    <p className="text-xs text-gray-600 line-clamp-2">{img.title}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Main Response - Use unified renderer */}
+      <UnifiedResponseRenderer
+        response={response}
+        mode="general"
+        onComplete={onComplete}
+        showFollowUpQuestions={showFollowUpQuestions}
+        conversationId={conversationId}
+      />
+      
+      {/* Image Lightbox */}
+      <AnimatePresence>
+        {lightboxImage && (
+          <ImageLightbox
+            imageUrl={lightboxImage.url}
+            title={lightboxImage.title}
+            onClose={() => setLightboxImage(null)}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
