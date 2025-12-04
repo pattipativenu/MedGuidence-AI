@@ -872,7 +872,7 @@ export default function DoctorMode() {
             {!hasSubmittedQuery && (
               <div className="text-center mb-12">
                 <h2 className="text-5xl font-light text-gray-900 mb-3">
-                  Med<span className="font-semibold">Guidence</span>
+                  Med<span className="font-semibold">Guidance</span>
                 </h2>
                 <p className="text-gray-500 text-sm">Evidence-based medical insights at your fingertips</p>
               </div>
