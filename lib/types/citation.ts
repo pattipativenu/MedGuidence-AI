@@ -12,7 +12,8 @@ export type QualityBadge =
   | 'Recent'
   | 'Systematic Review'
   | 'Meta-Analysis'
-  | 'Highly Cited';
+  | 'Highly Cited'
+  | 'PMCID';
 
 /**
  * Mode type for styling (Doctor Mode vs General Mode)
